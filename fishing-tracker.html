@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>🎣 Fish Log</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-width: 480px; margin: 0 auto; min-height: 100vh; }
+  
+  .header { background: linear-gradient(135deg, #0a1a0a, #1a2d0a); border-bottom: 1px solid #2a4a1a; padding: 14px 18px 0; position: sticky; top: 0; z-index: 10; }
+  .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .logo { font-family: 'Georgia', serif; font-size: 22px; color: #c8e6a0; letter-spacing: 1px; font-weight: bold; }
+  .logo-sub { color: #3a5a20; font-size: 10px; letter-spacing: 2px; font-family: sans-serif; }
+  .save-msg { font-size: 11px; margin-left: 8px; }
+  .save-msg.ok { color: #6aaa30; }
+  .save-msg.warn { color: #e07070; }
+  .save-msg.loading { color: #f0c040; }
+  
+  .header-btns { display: flex; gap: 8px; align-items: center; }
+  .btn-sheet { background: #1a2a1a; border: 1px solid #3a5a1a; border-radius: 8px; color: #6a8a50; padding: 8px 10px; font-size: 16px; cursor: pointer; text-decoration: none; display: inline-block; }
+  .btn-new { background: linear-gradient(135deg, #4a7a20, #6aaa30); border: none; border-radius: 22px; color: #fff; padding: 10px 18px; font-size: 14px; cursor: pointer; font-weight: bold; }
+  
+  .tabs { display: flex; }
+  .tab { flex: 1; background: none; border: none; border-bottom: 2px solid transparent; color: #4a6a2a; padding: 10px 0; font-size: 14px; cursor: pointer; }
+  .tab.active { border-bottom-color: #6aaa30; color: #c8e6a0; }
+  
+  .body { padding: 22px 16px 80px; }
+  
+  .empty { text-align: center; padding: 60px 20px; }
+  .empty-icon { font-size: 56px; margin-bottom: 18px; }
+  .empty-title { color: #6aaa30; font-size: 22px; margin-bottom: 8px; }
+  .empty-sub { color: #6a8a50; font-size: 14px; margin-bottom: 28px; line-height: 1.6; }
+  .sheet-link { color: #6a8a50; font-size: 13px; display: block; margin-bottom: 16px; }
+  
+  .btn { border-radius: 10px; padding: 13px 18px; font-size: 15px; cursor: pointer; border: none; font-weight: bold; }
+  .btn-primary { background: linear-gradient(135deg, #4a7a20, #6aaa30); color: #fff; }
+  .btn-secondary { background: transparent; color: #6a8a50; border: 1px solid #4a6a2a; }
+  .btn-ghost { background: #1a2a1a; color: #c8e6a0; border: 1px solid #3a5a1a; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-full { width: 100%; }
+  
+  .trip-card { background: linear-gradient(135deg, #1a2a1a 0%, #2d3d20 100%); border: 1px solid #4a6a2a; border-radius: 14px; padding: 16px; margin-bottom: 12px; cursor: pointer; position: relative; box-shadow: 0 4px 14px rgba(0,0,0,0.35); }
+  .trip-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .trip-name { color: #c8e6a0; font-size: 18px; font-weight: bold; padding-right: 50px; }
+  .trip-date { color: #6a8a50; font-size: 13px; margin-top: 3px; }
+  .trip-count { text-align: right; }
+  .trip-count-num { color: #f0c040; font-size: 28px; line-height: 1; font-weight: bold; }
+  .trip-count-label { color: #6a8a50; font-size: 11px; }
+  .trip-tags { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag { background: #3a5a1a; color: #c8e6a0; border-radius: 20px; padding: 3px 10px; font-size: 12px; }
+  .trip-with { color: #5a7a40; font-size: 13px; margin-top: 8px; }
+  .trip-delete { position: absolute; top: 14px; right: 14px; background: rgba(80,20,10,0.5); border: none; color: #c07060; font-size: 16px; cursor: pointer; width: 28px; height: 28px; border-radius: 14px; }
+  
+  .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+  .btn-cancel { background: none; border: none; color: #6a8a50; font-size: 16px; cursor: pointer; }
+  .step-dots { display: flex; gap: 5px; }
+  .step-dot { height: 8px; border-radius: 4px; background: #2a3a1a; transition: all 0.25s; }
+  .step-dot.active { width: 22px; background: #6aaa30; }
+  .step-dot.done { width: 8px; background: #4a7a20; }
+  .step-dot.pending { width: 8px; }
+  .step-label { color: #6a8a50; font-size: 13px; }
+  
+  .step-title { color: #f0c040; font-size: 18px; margin-bottom: 18px; font-weight: bold; }
+  .step-sub { color: #6a8a50; font-size: 13px; margin-bottom: 16px; }
+  
+  .field { margin-bottom: 18px; }
+  .field-label { color: #6a8a50; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .field input, .field textarea, .field select { width: 100%; background: #111e11; border: 1px solid #3a5a1a; border-radius: 8px; padding: 13px 14px; color: #c8e6a0; font-size: 16px; outline: none; font-family: inherit; }
+  .field textarea { min-height: 90px; resize: vertical; }
+  .field-row { display: flex; gap: 10px; }
+  .field-row .field { flex: 1; }
+  
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+  .chips-label { color: #6a8a50; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .chip { background: #111e11; border: 1px solid #3a5a1a; color: #6a8a50; border-radius: 20px; padding: 9px 15px; font-size: 14px; cursor: pointer; }
+  .chip.active { background: linear-gradient(135deg, #4a7a20, #6aaa30); border-color: #6aaa30; color: #fff; }
+  
+  .companion-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .companion-input { flex: 1; background: #111e11; border: 1px solid #3a5a1a; border-radius: 8px; padding: 13px 14px; color: #c8e6a0; font-size: 16px; outline: none; }
+  .companion-item { display: flex; justify-content: space-between; align-items: center; background: #1a2a1a; border: 1px solid #3a5a1a; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; }
+  .companion-name { color: #c8e6a0; font-size: 15px; }
+  .companion-remove { background: none; border: none; color: #7a4a3a; cursor: pointer; font-size: 20px; }
+  
+  .sep-box { margin-top: 20px; background: #1a2a1a; border: 1px solid #3a5a1a; border-radius: 10px; padding: 16px; }
+  .sep-label { color: #c8e6a0; font-size: 15px; margin-bottom: 14px; }
+  .sep-btns { display: flex; gap: 10px; }
+  .sep-note { color: #6a8a50; font-size: 12px; margin-top: 10px; }
+  
+  .catch-log { background: #111e11; border: 1px solid #3a5a1a; border-radius: 12px; overflow: hidden; margin-top: 4px; }
+  .catch-log-header { display: flex; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid #3a5a1a; }
+  .catch-log-title { color: #6a8a50; font-size: 12px; text-transform: uppercase; }
+  .catch-log-total { color: #f0c040; font-size: 16px; font-weight: bold; }
+  .catch-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid #3a5a1a; }
+  .catch-row:last-child { border-bottom: none; }
+  .catch-name { color: #c8e6a0; font-size: 14px; }
+  .catch-right { display: flex; align-items: center; gap: 12px; }
+  .catch-num { color: #f0c040; font-size: 18px; font-weight: bold; }
+  .catch-del { background: none; border: none; color: #7a4a3a; cursor: pointer; font-size: 18px; }
+  .catch-empty { text-align: center; color: #3a5a1a; padding: 20px 0; font-size: 13px; }
+  
+  .form-btns { display: flex; gap: 10px; margin-top: 24px; }
+  
+  .detail-back { background: none; border: none; color: #6a8a50; font-size: 16px; cursor: pointer; padding: 0 0 18px 0; display: block; }
+  .detail-title { color: #c8e6a0; font-size: 24px; margin-bottom: 4px; font-weight: bold; }
+  .detail-date { color: #6a8a50; margin-bottom: 18px; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+  .detail-chip { background: #1a2a1a; border: 1px solid #3a5a1a; border-radius: 9px; padding: 10px 12px; }
+  .detail-chip-label { color: #6a8a50; font-size: 11px; text-transform: uppercase; }
+  .detail-chip-val { color: #c8e6a0; font-size: 13px; margin-top: 2px; }
+  .section { margin-bottom: 20px; }
+  .section-title { color: #6a8a50; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  .section-content { color: #c8e6a0; font-size: 15px; }
+  .catch-detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #3a5a1a; }
+  .catch-detail-name { color: #c8e6a0; font-size: 15px; }
+  .catch-detail-num { color: #f0c040; font-size: 20px; font-weight: bold; }
+  .bait-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .bait-tag { background: #3a5a1a; color: #c8e6a0; border-radius: 20px; padding: 5px 13px; font-size: 13px; }
+  .saved-badge { margin-top: 20px; background: #0a1a0a; border: 1px solid #3a5a1a; border-radius: 10px; padding: 12px; color: #6aaa30; font-size: 13px; }
+  
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
+  .stat-card { background: linear-gradient(135deg, #1a2a1a, #2d3d20); border: 1px solid #4a6a2a; border-radius: 12px; padding: 14px; }
+  .stat-val { color: #f0c040; font-size: 22px; font-weight: bold; }
+  .stat-label { color: #6a8a50; font-size: 12px; }
+  .bar-row { margin-bottom: 10px; }
+  .bar-label-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+  .bar-name { color: #c8e6a0; font-size: 14px; }
+  .bar-num { color: #f0c040; font-weight: bold; }
+  .bar-bg { background: #1a2a0a; border-radius: 4px; height: 7px; }
+  .bar-fill { background: linear-gradient(90deg, #4a7a20, #6aaa30); border-radius: 4px; height: 7px; }
+  .spot-row { display: flex; justify-content: space-between; padding: 10px 14px; background: #1a2a1a; border-radius: 9px; margin-bottom: 8px; border: 1px solid #3a5a1a; }
+  .spot-name { color: #c8e6a0; font-size: 13px; }
+  .spot-num { color: #f0c040; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="logo">🎣 FISH LOG</div>
+      <div class="logo-sub">WISCONSIN · SHEETS <span id="saveMsg" class="save-msg"></span></div>
+    </div>
+    <div class="header-btns">
+      <a class="btn-sheet" href="https://docs.google.com/spreadsheets/d/1uqt0d4LqwomGOqYvTQJaxXDG_ZXLxt-RLdTwwFe6D-c" target="_blank">📊</a>
+      <button class="btn-new" id="btnNewTrip" onclick="showView('new')">+ New Trip</button>
+    </div>
+  </div>
+  <div class="tabs" id="mainTabs">
+    <button class="tab active" onclick="showView('log')">🎣 Trips</button>
+    <button class="tab" onclick="showView('stats')">📊 Stats</button>
+  </div>
+</div>
+
+<div class="body" id="appBody"></div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-vT6JtXn1EfzGxWDoO_pi-cwSjJ7ULiKy8Nb0nv4pqHlQurChrxM0yhPH54cPGkpl/exec";
+const SPECIES = ["Yellow Perch","Walleye","Crappie","Largemouth Bass","Northern Pike","Muskie","Bluegill/Panfish","Catfish","Other"];
+const LOC_TYPES = ["My Boathouse/Channel","Bridge","Boat - Mine","Boat - Other's","Shore","Pier/Dock","Ice","Other"];
+const BAITS = ["Rosie Red Minnows","Live Minnows","Nightcrawlers","Leeches","Spinnerbait","Jerkbait","Swimbait","Jig","Crankbait","Other"];
+const WIND = ["Calm","Light Breeze","Moderate Wind","Strong Wind"];
+const SKY = ["Sunny","Partly Cloudy","Overcast","Foggy","Rainy"];
+
+let trips = [];
+let currentView = "log";
+let selectedTrip = null;
+let formData = {};
+let formStep = 0;
+
+// Load cached trips
+try { trips = JSON.parse(localStorage.getItem("fishlog-v6") || "[]"); } catch {}
+
+function saveCache() {
+  try { localStorage.setItem("fishlog-v6", JSON.stringify(trips)); } catch {}
+}
+
+function showMsg(msg, type, duration=4000) {
+  const el = document.getElementById("saveMsg");
+  el.textContent = msg;
+  el.className = "save-msg " + type;
+  if (duration) setTimeout(() => { el.textContent = ""; el.className = "save-msg"; }, duration);
+}
+
+function showView(view) {
+  currentView = view;
+  const tabs = document.getElementById("mainTabs");
+  const btnNew = document.getElementById("btnNewTrip");
+  tabs.style.display = (view === "log" || view === "stats") ? "flex" : "none";
+  btnNew.style.display = view === "log" ? "block" : "none";
+  document.querySelectorAll(".tab").forEach((t,i) => t.classList.toggle("active", (i===0&&view==="log")||(i===1&&view==="stats")));
+  render();
+}
+
+function render() {
+  const body = document.getElementById("appBody");
+  if (currentView === "new") { body.innerHTML = renderForm(); attachFormEvents(); return; }
+  if (currentView === "detail" && selectedTrip) { body.innerHTML = renderDetail(selectedTrip); return; }
+  if (currentView === "stats") { body.innerHTML = renderStats(); return; }
+  // log view
+  if (!trips.length) {
+    body.innerHTML = `<div class="empty">
+      <div class="empty-icon">🎣</div>
+      <div class="empty-title">Ready to fish!</div>
+      <div class="empty-sub">Trips save permanently to your Google Sheet.</div>
+      <a class="sheet-link" href="https://docs.google.com/spreadsheets/d/1uqt0d4LqwomGOqYvTQJaxXDG_ZXLxt-RLdTwwFe6D-c" target="_blank">📊 View Google Sheet</a>
+      <button class="btn btn-primary" onclick="showView('new')">+ Log First Trip</button>
+    </div>`;
+    return;
+  }
+  body.innerHTML = trips.map((t,i) => renderCard(t,i)).join("");
+}
+
+function fmtDate(d) {
+  try { return new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}); } catch { return d; }
+}
+
+function allCatches(t) { return [...(t.catches||[]), ...(t.groupCatches||[])]; }
+function totalFish(t) { return allCatches(t).reduce((s,c)=>s+(parseInt(c.count)||0),0); }
+
+function renderCard(t, i) {
+  const total = totalFish(t);
+  const species = [...new Set(allCatches(t).map(c=>c.species))];
+  return `<div class="trip-card" onclick="openTrip(${i})">
+    <div class="trip-card-top">
+      <div>
+        <div class="trip-name">${t.locationName||t.locationType||"Unnamed Spot"}</div>
+        <div class="trip-date">${fmtDate(t.date)}${t.locationType?" · "+t.locationType:""}</div>
+      </div>
+      <div class="trip-count">
+        <div class="trip-count-num">${total}</div>
+        <div class="trip-count-label">fish</div>
+      </div>
+    </div>
+    ${species.length?`<div class="trip-tags">${species.map(s=>`<span class="tag">${s}</span>`).join("")}</div>`:""}
+    ${t.companions?.length?`<div class="trip-with">👥 ${t.companions.join(", ")}</div>`:""}
+    <button class="trip-delete" onclick="event.stopPropagation();deleteTrip(${i})">✕</button>
+  </div>`;
+}
+
+function openTrip(i) { selectedTrip = trips[i]; showView("detail"); }
+
+function deleteTrip(i) {
+  if (!confirm("Remove from this view?\n(Row stays in Google Sheet)")) return;
+  trips.splice(i,1); saveCache(); render();
+}
+
+function renderDetail(t) {
+  const all = allCatches(t);
+  const total = totalFish(t);
+  const chips = [["Type",t.locationType],["GPS",t.coordinates],["Wind",t.wind],["Sky",t.sky]].filter(([,v])=>v);
+  return `<button class="detail-back" onclick="showView('log')">← Back</button>
+    <div class="detail-title">${t.locationName||t.locationType||"Unnamed Spot"}</div>
+    <div class="detail-date">${fmtDate(t.date)}${t.startTime?" · "+t.startTime:""}${t.endTime?" – "+t.endTime:""}</div>
+    ${chips.length?`<div class="detail-grid">${chips.map(([k,v])=>`<div class="detail-chip"><div class="detail-chip-label">${k}</div><div class="detail-chip-val">${v}</div></div>`).join("")}</div>`:""}
+    ${t.companions?.length?`<div class="section"><div class="section-title">Fishing With</div><div class="section-content">${t.companions.join(", ")}</div></div>`:""}
+    <div class="section"><div class="section-title">Catch · ${total} fish</div>
+      ${all.length?all.map(c=>`<div class="catch-detail-row"><span class="catch-detail-name">${c.person?c.person+": ":""}${c.species}</span><span class="catch-detail-num">${c.count}</span></div>`).join(""):`<div style="color:#6a8a50">No catches recorded.</div>`}
+    </div>
+    ${t.bait?.length?`<div class="section"><div class="section-title">Bait / Lures</div><div class="bait-tags">${t.bait.map(b=>`<span class="bait-tag">${b}</span>`).join("")}</div></div>`:""}
+    ${t.notes?`<div class="section"><div class="section-title">Notes</div><div class="section-content" style="line-height:1.7;font-size:14px">${t.notes}</div></div>`:""}
+    <div class="saved-badge">✅ Saved permanently in your Google Sheet</div>`;
+}
+
+function renderStats() {
+  if (!trips.length) return `<div style="color:#6a8a50;text-align:center;padding:60px 20px">No trips yet.</div>`;
+  const bySpecies={}, bySpot={};
+  let totalF=0;
+  trips.forEach(t=>{
+    allCatches(t).forEach(c=>{ const n=parseInt(c.count)||0; bySpecies[c.species]=(bySpecies[c.species]||0)+n; totalF+=n; });
+    const loc=t.locationName||t.locationType||"Unknown";
+    bySpot[loc]=(bySpot[loc]||0)+totalFish(t);
+  });
+  const topSp=Object.entries(bySpecies).sort((a,b)=>b[1]-a[1]);
+  const topSt=Object.entries(bySpot).sort((a,b)=>b[1]-a[1]);
+  return `<div class="stats-grid">
+    ${[["Total Trips",trips.length],["Total Fish",totalF],["Top Species",topSp[0]?.[0]||"—"],["Top Spot",topSt[0]?.[0]||"—"]].map(([l,v])=>`<div class="stat-card"><div class="stat-val">${v}</div><div class="stat-label">${l}</div></div>`).join("")}
+  </div>
+  ${topSp.length?`<div class="section"><div class="section-title">By Species</div>${topSp.map(([sp,ct])=>`<div class="bar-row"><div class="bar-label-row"><span class="bar-name">${sp}</span><span class="bar-num">${ct}</span></div><div class="bar-bg"><div class="bar-fill" style="width:${Math.round(ct/totalF*100)}%"></div></div></div>`).join("")}</div>`:""}
+  ${topSt.length?`<div class="section"><div class="section-title">Top Spots</div>${topSt.slice(0,6).map(([sp,ct])=>`<div class="spot-row"><span class="spot-name">📍 ${sp}</span><span class="spot-num">${ct} fish</span></div>`).join("")}</div>`:""}`;
+}
+
+// ── FORM ──────────────────────────────────────────────────────
+function initForm() {
+  formStep = 0;
+  const today = new Date().toISOString().split("T")[0];
+  formData = { date:today, locationName:"", locationType:"", coordinates:"", startTime:"", endTime:"", companions:[], separateCounts:false, catches:[], groupCatches:[], bait:[], wind:"", sky:"", notes:"", cSpecies:"", cCount:"", cPerson:"Group" };
+}
+
+function renderForm() {
+  const steps = [renderStep0, renderStep1, renderStep2, renderStep3];
+  const dots = [0,1,2,3].map(i=>`<div class="step-dot ${i===formStep?"active":i<formStep?"done":"pending"}"></div>`).join("");
+  return `<div class="form-header">
+    <button class="btn-cancel" onclick="showView('log')">✕ Cancel</button>
+    <div class="step-dots">${dots}</div>
+    <span class="step-label">${formStep+1} / 4</span>
+  </div>
+  ${steps[formStep]()}
+  <div class="form-btns">
+    ${formStep>0?`<button class="btn btn-secondary" style="flex:1" onclick="formStepChange(-1)">← Back</button>`:""}
+    ${formStep<3?`<button class="btn btn-primary" style="flex:2" onclick="formStepChange(1)">Next →</button>`:`<button class="btn btn-primary btn-full" id="btnSave" onclick="saveTrip()">✅ Save Trip to Google Sheets</button>`}
+  </div>`;
+}
+
+function renderStep0() {
+  return `<div class="step-title">📍 Where & When</div>
+  <div class="field"><div class="field-label">Date</div><input type="date" id="fDate" value="${formData.date}" onchange="formData.date=this.value"></div>
+  <div class="field"><div class="field-label">Spot Name</div><input type="text" id="fSpot" value="${formData.locationName}" placeholder="e.g. Neenah Bridge..." onchange="formData.locationName=this.value"></div>
+  <div class="chips-label">Location Type</div>
+  <div class="chips">${LOC_TYPES.map(o=>`<button class="chip${formData.locationType===o?" active":""}" onclick="toggleSingle('locationType','${o}')">${o}</button>`).join("")}</div>
+  <div class="field"><div class="field-label">GPS Coordinates (optional)</div><input type="text" id="fGPS" value="${formData.coordinates}" placeholder="e.g. 44.1234, -88.5678" onchange="formData.coordinates=this.value"></div>
+  <div class="field-row">
+    <div class="field"><div class="field-label">Start Time</div><input type="time" value="${formData.startTime}" onchange="formData.startTime=this.value"></div>
+    <div class="field"><div class="field-label">End Time</div><input type="time" value="${formData.endTime}" onchange="formData.endTime=this.value"></div>
+  </div>`;
+}
+
+function renderStep1() {
+  return `<div class="step-title">👥 Who Were You With?</div>
+  <div class="step-sub">Leave blank if you fished alone.</div>
+  <div class="companion-row">
+    <input class="companion-input" type="text" id="compInput" placeholder="Type a name (e.g. Keith)" onkeydown="if(event.key==='Enter')addComp()">
+    <button class="btn btn-primary" style="padding:13px 18px" onclick="addComp()">Add</button>
+  </div>
+  <div id="compList">${renderCompList()}</div>
+  ${formData.companions.length?`<div class="sep-box"><div class="sep-label">Track catches separately per person?</div>
+  <div class="sep-btns">
+    <button class="btn ${formData.separateCounts?"btn-primary":"btn-ghost"}" style="flex:1" onclick="formData.separateCounts=true;rerender()">✅ Yes</button>
+    <button class="btn ${!formData.separateCounts?"btn-primary":"btn-ghost"}" style="flex:1" onclick="formData.separateCounts=false;rerender()">Group Total</button>
+  </div>
+  <div class="sep-note">${formData.separateCounts?"You'll assign each catch to a person.":"All catches logged as one group total."}</div></div>`:""}`;
+}
+
+function renderStep2() {
+  const canAdd = formData.cSpecies && formData.cCount && parseInt(formData.cCount)>0;
+  const all = [...formData.catches, ...formData.groupCatches];
+  const total = all.reduce((s,c)=>s+(c.count||0),0);
+  const persons = ["Group","Me",...formData.companions];
+  return `<div class="step-title">🐟 What Did You Catch?</div>
+  <div class="step-sub">Pick species → enter count → tap Add Catch</div>
+  <div class="chips-label">Species</div>
+  <div class="chips">${SPECIES.map(o=>`<button class="chip${formData.cSpecies===o?" active":""}" onclick="formData.cSpecies='${o}';rerender()">${o}</button>`).join("")}</div>
+  <div class="field"><div class="field-label">Count</div><input type="number" id="fCount" value="${formData.cCount}" placeholder="How many?" oninput="formData.cCount=this.value"></div>
+  ${formData.separateCounts?`<div class="chips-label">Whose catch?</div><div class="chips">${persons.map(o=>`<button class="chip${formData.cPerson===o?" active":""}" onclick="formData.cPerson='${o}';rerender()">${o}</button>`).join("")}</div>`:""}
+  <button class="btn ${canAdd?"btn-primary":"btn-ghost"} btn-full" style="margin-bottom:20px" onclick="addCatch()" ${canAdd?"":"disabled"}>
+    ${canAdd?`+ Add ${formData.cCount} ${formData.cSpecies}`:"+ Select species & enter count first"}
+  </button>
+  ${all.length?`<div class="catch-log">
+    <div class="catch-log-header"><span class="catch-log-title">Catch Log</span><span class="catch-log-total">${total} total</span></div>
+    ${all.map((c,i)=>`<div class="catch-row"><span class="catch-name">${c.person?c.person+": ":""}${c.species}</span><div class="catch-right"><span class="catch-num">${c.count}</span><button class="catch-del" onclick="removeCatch(${i})">✕</button></div></div>`).join("")}
+  </div>`:`<div class="catch-empty">No catches added yet</div>`}`;
+}
+
+function renderStep3() {
+  return `<div class="step-title">🌤 Conditions & Bait</div>
+  <div class="chips-label">Bait / Lures Used</div>
+  <div class="chips">${BAITS.map(o=>`<button class="chip${formData.bait.includes(o)?" active":""}" onclick="toggleMulti('bait','${o}')">${o}</button>`).join("")}</div>
+  <div class="chips-label">Wind</div>
+  <div class="chips">${WIND.map(o=>`<button class="chip${formData.wind===o?" active":""}" onclick="toggleSingle('wind','${o}')">${o}</button>`).join("")}</div>
+  <div class="chips-label">Sky</div>
+  <div class="chips">${SKY.map(o=>`<button class="chip${formData.sky===o?" active":""}" onclick="toggleSingle('sky','${o}')">${o}</button>`).join("")}</div>
+  <div class="field"><div class="field-label">Notes</div><textarea placeholder="Anything worth remembering..." onchange="formData.notes=this.value">${formData.notes}</textarea></div>`;
+}
+
+function renderCompList() {
+  return formData.companions.map((c,i)=>`<div class="companion-item"><span class="companion-name">👤 ${c}</span><button class="companion-remove" onclick="removeComp(${i})">✕</button></div>`).join("");
+}
+
+function rerender() { const b=document.getElementById("appBody"); b.innerHTML=renderForm(); attachFormEvents(); }
+
+function attachFormEvents() {
+  // re-attach any needed events after rerender
+}
+
+function formStepChange(dir) {
+  // capture current input values before changing step
+  const spotEl = document.getElementById("fSpot");
+  const gpsEl = document.getElementById("fGPS");
+  const dateEl = document.getElementById("fDate");
+  const countEl = document.getElementById("fCount");
+  if (spotEl) formData.locationName = spotEl.value;
+  if (gpsEl) formData.coordinates = gpsEl.value;
+  if (dateEl) formData.date = dateEl.value;
+  if (countEl) formData.cCount = countEl.value;
+  formStep += dir;
+  rerender();
+}
+
+function toggleSingle(key, val) { formData[key] = formData[key]===val?"":val; rerender(); }
+function toggleMulti(key, val) { formData[key]=formData[key].includes(val)?formData[key].filter(x=>x!==val):[...formData[key],val]; rerender(); }
+
+function addComp() {
+  const el = document.getElementById("compInput");
+  const val = el?el.value.trim():"";
+  if (val) { formData.companions.push(val); el.value=""; rerender(); }
+}
+
+function removeComp(i) { formData.companions.splice(i,1); rerender(); }
+
+function addCatch() {
+  const countEl = document.getElementById("fCount");
+  if (countEl) formData.cCount = countEl.value;
+  if (!formData.cSpecies || !formData.cCount || parseInt(formData.cCount)<=0) return;
+  const entry = { species:formData.cSpecies, count:parseInt(formData.cCount) };
+  if (formData.separateCounts && formData.cPerson !== "Group") {
+    entry.person = formData.cPerson;
+    formData.catches.push(entry);
+  } else {
+    formData.groupCatches.push(entry);
+  }
+  formData.cSpecies=""; formData.cCount="";
+  rerender();
+}
+
+function removeCatch(i) {
+  const all = [...formData.catches.map((c,j)=>({...c,_src:"catches",_idx:j})), ...formData.groupCatches.map((c,j)=>({...c,_src:"groupCatches",_idx:j}))];
+  const item = all[i];
+  if (item._src==="catches") formData.catches.splice(item._idx,1);
+  else formData.groupCatches.splice(item._idx,1);
+  rerender();
+}
+
+async function saveTrip() {
+  const btn = document.getElementById("btnSave");
+  if (btn) { btn.disabled=true; btn.textContent="⏳ Saving..."; }
+  showMsg("⏳ Saving to Google Sheets...", "loading", 0);
+
+  const trip = { ...formData, id: Date.now().toString() };
+  const all = [...trip.catches, ...trip.groupCatches];
+  const catchSummary = all.map(c=>`${c.person?c.person+": ":""}${c.species} (${c.count})`).join("; ");
+  const total = all.reduce((s,c)=>s+(parseInt(c.count)||0),0);
+
+  const params = new URLSearchParams({
+    action:"save", id:trip.id, date:trip.date,
+    spot:trip.locationName||"", type:trip.locationType||"",
+    gps:trip.coordinates||"", start:trip.startTime||"", end:trip.endTime||"",
+    with:(trip.companions||[]).join(", "), fish:total, catches:catchSummary,
+    bait:(trip.bait||[]).join(", "), wind:trip.wind||"", sky:trip.sky||"",
+    notes:(trip.notes||"").substring(0,200), saved:new Date().toLocaleString()
+  });
+
+  try {
+    await fetch(`${SCRIPT_URL}?${params.toString()}`, { method:"GET", mode:"no-cors" });
+    trips.unshift(trip);
+    saveCache();
+    showMsg("✅ Saved to Google Sheets!", "ok");
+    showView("log");
+  } catch(err) {
+    trips.unshift(trip);
+    saveCache();
+    showMsg("⚠️ Saved locally — check your sheet", "warn");
+    showView("log");
+  }
+}
+
+// Init
+initForm();
+render();
+</script>
+</body>
+</html>
