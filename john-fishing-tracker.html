@@ -157,7 +157,7 @@
 <div class="body" id="appBody"></div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwwQumeGVraIN76oDPDQX5B788AjZfpTvynfi4j-1WNsynE8Uvy2rzB0qAJgctE_Cy8/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-vT6JtXn1EfzGxWDoO_pi-cwSjJ7ULiKy8Nb0nv4pqHlQurChrxM0yhPH54cPGkpl/exec";
 const SPECIES = ["Yellow Perch","Walleye","Crappie","Largemouth Bass","Northern Pike","Muskie","Bluegill/Panfish","Catfish","Other"];
 const LOC_TYPES = ["My Boathouse/Channel","Bridge","Boat - Mine","Boat - Other's","Shore","Pier/Dock","Ice","Other"];
 const BAITS = ["Rosie Red Minnows","Live Minnows","Nightcrawlers","Leeches","Spinnerbait","Jerkbait","Swimbait","Jig","Crankbait","Other"];
@@ -251,7 +251,7 @@ async function deleteTrip(i) {
   render();
   showMsg("\ud83d\uddd1 Deleting from sheet...", "loading", 0);
   try {
-    const params = new URLSearchParams({ action:"delete", id:trip.id });
+    const params = new URLSearchParams({ action:"delete", sheet:"Johns Trips", id:trip.id });
     await fetch(`${SCRIPT_URL}?${params.toString()}`, { method:"GET", mode:"no-cors" });
     showMsg("\u2705 Deleted from Google Sheet", "ok");
   } catch(err) {
@@ -445,7 +445,7 @@ async function saveTrip() {
   const total = all.reduce((s,c)=>s+(parseInt(c.count)||0),0);
 
   const params = new URLSearchParams({
-    action:"save", id:trip.id, date:trip.date,
+    action:"save", sheet:"Johns Trips", id:trip.id, date:trip.date,
     spot:trip.locationName||"", type:trip.locationType||"",
     gps:trip.coordinates||"", start:trip.startTime||"", end:trip.endTime||"",
     with:(trip.companions||[]).join(", "), fish:total, catches:catchSummary,
