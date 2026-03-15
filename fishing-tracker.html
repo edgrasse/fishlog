@@ -243,9 +243,20 @@ function renderCard(t, i) {
 
 function openTrip(i) { selectedTrip = trips[i]; showView("detail"); }
 
-function deleteTrip(i) {
-  if (!confirm("Remove from this view?\n(Row stays in Google Sheet)")) return;
-  trips.splice(i,1); saveCache(); render();
+async function deleteTrip(i) {
+  if (!confirm("Delete this trip?\nThis removes it from the app AND your Google Sheet.")) return;
+  const trip = trips[i];
+  trips.splice(i,1);
+  saveCache();
+  render();
+  showMsg("\ud83d\uddd1 Deleting from sheet...", "loading", 0);
+  try {
+    const params = new URLSearchParams({ action:"delete", id:trip.id });
+    await fetch(`${SCRIPT_URL}?${params.toString()}`, { method:"GET", mode:"no-cors" });
+    showMsg("\u2705 Deleted from Google Sheet", "ok");
+  } catch(err) {
+    showMsg("\u26a0\ufe0f Removed locally \u2014 delete row in sheet manually if needed", "warn");
+  }
 }
 
 function renderDetail(t) {
