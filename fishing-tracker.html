@@ -185,6 +185,7 @@ function showMsg(msg, type, duration=4000) {
 }
 
 function showView(view) {
+  if (view === "new") initForm();
   currentView = view;
   const tabs = document.getElementById("mainTabs");
   const btnNew = document.getElementById("btnNewTrip");
