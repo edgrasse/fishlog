@@ -227,7 +227,12 @@ async function workerCall(payload) {
     body: JSON.stringify({ appId: APP_ID, ...payload })
   });
   if (!r.ok) throw new Error('Worker error: ' + r.status);
-  return r.json();
+  const json = await r.json();
+  // Normalize response — worker may return array directly or {data:[]} wrapper
+  if (Array.isArray(json)) return { data: json };
+  if (json.data !== undefined) return json;
+  if (json.error) throw new Error('Supabase error: ' + json.error);
+  return { data: [] };
 }
 async function sbGet(table, filters) { return workerCall({ method: 'SELECT', table, filters: filters || '' }); }
 async function sbInsert(table, row) { return workerCall({ method: 'INSERT', table, data: row }); }
@@ -969,11 +974,12 @@ async function runDiagnostic() {
     if (el) el.textContent = `Status: ${res.status} | Response: ${text.substring(0, 200)}`;
     try {
       const json = JSON.parse(text);
-      if (json.data && json.data.length > 0) {
-        users = json.data;
-        setView('auth'); // re-render with users
+      const data = Array.isArray(json) ? json : (json.data || []);
+      if (data.length > 0) {
+        users = data;
+        setView('auth');
       } else {
-        if (el) el.textContent = `Worker OK but no users returned. Raw: ${text.substring(0, 200)}`;
+        if (el) el.textContent = `Worker OK but no users in response. Raw: ${text.substring(0, 200)}`;
       }
     } catch(pe) {
       if (el) el.textContent = `Parse error: ${pe.message} | Raw: ${text.substring(0, 150)}`;
