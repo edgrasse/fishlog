@@ -297,7 +297,7 @@ function render() {
       <div class="header-top">
         <div>
           <div class="logo">🎣 FISH LOG</div>
-          <div class="logo-sub">WISCONSIN · SUPABASE <span id="saveMsg" class="save-msg"></span></div>
+          <div class="logo-sub">WISCONSIN · SUPABASE · v1.1 · 2026-04-28 <span id="saveMsg" class="save-msg"></span></div>
         </div>
         <div class="header-btns">
           ${showNew ? `<button class="btn-spot" onclick="quickSpot()">📍 Save Spot</button>` : ''}
@@ -334,15 +334,23 @@ function renderAuth() {
     <div class="auth-icon">🎣</div>
     <div class="auth-title">Fish Log</div>
     <div class="auth-sub">Who's fishing today?</div>
+    ${users.length === 0 ? `
+    <div style="background:#1a1a0a;border:1px solid #8a6a20;border-radius:10px;padding:14px;margin-bottom:16px;text-align:left">
+      <div style="color:#f0c040;font-size:13px;font-weight:bold;margin-bottom:8px">⚠️ Could not load users</div>
+      <div style="color:#8a7a50;font-size:12px;margin-bottom:8px">Diagnostic info:</div>
+      <div id="diagInfo" style="color:#6aaa50;font-size:11px;font-family:monospace;word-break:break-all">Running test...</div>
+      <button onclick="runDiagnostic()" style="background:#2a3a1a;border:1px solid #4a6a2a;border-radius:6px;color:#8aaa60;padding:6px 12px;font-size:12px;cursor:pointer;margin-top:8px">🔄 Run Test</button>
+    </div>` : `
     <div class="user-list">
       ${users.map(u => `<button class="user-option" onclick="selectUser('${u.id}')">
         <div class="user-option-dot" style="background:${u.color}"></div>
         <div><div class="user-option-name">${u.icon} ${u.name}</div><div class="user-option-sub">Tap to enter PIN</div></div>
       </button>`).join('')}
-    </div>
+    </div>`}
     <button class="btn btn-ghost btn-full" onclick="startRegister()" style="margin-bottom:12px">+ New Angler</button>
     <button class="btn btn-secondary btn-full" onclick="viewOnly()">👁 View Only (no PIN)</button>
   </div>`;
+}
 }
 
 function renderPin() {
@@ -946,6 +954,34 @@ function setView(v) {
   render();
 }
 
+// ── DIAGNOSTIC ────────────────────────────────────────────────
+async function runDiagnostic() {
+  const el = document.getElementById('diagInfo');
+  if (el) el.textContent = 'Testing worker connection...';
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appId: APP_ID, method: 'SELECT', table: 'FishingUsers', filters: 'order=name.asc' })
+    });
+    const text = await res.text();
+    if (el) el.textContent = `Status: ${res.status} | Response: ${text.substring(0, 200)}`;
+    try {
+      const json = JSON.parse(text);
+      if (json.data && json.data.length > 0) {
+        users = json.data;
+        setView('auth'); // re-render with users
+      } else {
+        if (el) el.textContent = `Worker OK but no users returned. Raw: ${text.substring(0, 200)}`;
+      }
+    } catch(pe) {
+      if (el) el.textContent = `Parse error: ${pe.message} | Raw: ${text.substring(0, 150)}`;
+    }
+  } catch(e) {
+    if (el) el.textContent = `Connection failed: ${e.message}`;
+  }
+}
+
 // ── INIT ───────────────────────────────────────────────────────
 async function init() {
   document.getElementById('app').innerHTML = '<div class="loading">⏳ Loading Fish Log...</div>';
@@ -956,8 +992,15 @@ async function init() {
     document.getElementById('app').innerHTML = `<div class="loading" style="color:#e07070">⚠️ Connection error<br><small style="font-size:12px;color:#6a4a4a">${e.message}</small><br><br><button onclick="init()" style="background:#4a7a20;border:none;color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:14px">Retry</button></div>`;
     return;
   }
-  if (!currentUser) setView('auth');
-  else setView('log');
+  if (!currentUser) {
+    setView('auth');
+    // Auto-run diagnostic if no users loaded
+    if (users.length === 0) {
+      setTimeout(runDiagnostic, 500);
+    }
+  } else {
+    setView('log');
+  }
 }
 
 init();
