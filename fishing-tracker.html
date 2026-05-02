@@ -6,8 +6,23 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎣</text></svg>">
 <title>🎣 Fish Log</title>
+<script>
+// Force reload if a newer version is available
+const CACHE_VERSION = 'fishlog-v2.3-20260501';
+const stored = localStorage.getItem('fishlog-cache-version');
+if (stored && stored !== CACHE_VERSION) {
+  localStorage.setItem('fishlog-cache-version', CACHE_VERSION);
+  // Force hard reload to bypass iOS cache
+  window.location.reload(true);
+} else if (!stored) {
+  localStorage.setItem('fishlog-cache-version', CACHE_VERSION);
+}
+</script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-width: 480px; margin: 0 auto; min-height: 100vh; }
@@ -195,7 +210,7 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 </div>
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-const VERSION = 'v2.2 · 2026-05-01';
+const VERSION = 'v2.4 · 2026-05-01';
 const WORKER_URL = 'https://grasse-apps-proxy.ed-53c.workers.dev';
 const APP_ID = 'fishinglog';
 const SUPABASE_URL = 'https://viprflxaudxjwsvytrnn.supabase.co';
@@ -651,15 +666,65 @@ function renderDetail() {
     </div>`:''}
     ${t.notes?`<div class="section"><div class="section-title">Notes</div><div style="color:#c8e6a0;line-height:1.7;font-size:14px">${t.notes}</div></div>`:''}
     ${hasGps?`<div class="section"><div class="section-title">Location</div><a href="https://maps.google.com/?q=${t.latitude},${t.longitude}" target="_blank" style="color:#6aaa30;font-size:14px">📍 View on Google Maps →</a></div>`:''}
-    ${isOwn?`<button class="btn btn-ghost btn-full" style="margin-top:8px" onclick="addPhotosToOuting('${t.id}')">📷 Add Photos</button>`:''}
+    ${isOwn?`
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-ghost" style="flex:1" onclick="editOuting()">✏️ Edit Outing</button>
+      <button class="btn btn-ghost" style="flex:1" onclick="addPhotosToOuting('${t.id}')">📷 Add Photos</button>
+    </div>`:''}
     <div class="saved-badge">✅ Saved in Fish Log</div>`;
 }
 
 function completeDraft() {
   const t=selectedOuting;
-  formData={id:t.id,isCompleting:true,date:t.date,locationName:t.location_name||'',locationType:t.location_type||'',latitude:t.latitude||'',longitude:t.longitude||'',startTime:t.start_time||'',endTime:'',companions:[],companionUserIds:[],separateCounts:false,catches:[],groupCatches:[],bait:[],wind:'',sky:'',notes:'',isCompleting:true,cSpecies:'',cCount:'',cPerson:'Group',customSpecies:''};
+  formData={id:t.id,isCompleting:true,isEditing:false,date:t.date,locationName:t.location_name||'',locationType:t.location_type||'',latitude:t.latitude||'',longitude:t.longitude||'',startTime:t.start_time||'',endTime:'',companions:[],companionUserIds:[],separateCounts:false,catches:[],groupCatches:[],bait:[],wind:'',sky:'',notes:'',cSpecies:'',cCount:'',cPerson:'Group',customSpecies:''};
   pendingPhotos=[];
   formStep=0;
+  setView('new');
+}
+
+function editOuting() {
+  const t = selectedOuting;
+  const tc = catches[t.id] || [];
+
+  // Rebuild catches — separate person catches vs group catches
+  const personCatches = tc.filter(c => c.person);
+  const groupCatches = tc.filter(c => !c.person);
+
+  // Rebuild companion user IDs from shared outings (we'll re-share on save)
+  // and text companions from catch persons that aren't registered users
+  const userNames = users.map(u => fullName(u));
+  const catchPersons = [...new Set(personCatches.map(c => c.person).filter(p => p && p !== 'Me'))];
+  const companionUserIds = catchPersons.filter(name => users.find(u => fullName(u) === name)).map(name => users.find(u => fullName(u) === name).id);
+  const textCompanions = catchPersons.filter(name => !users.find(u => fullName(u) === name));
+  const hasSeparate = personCatches.length > 0;
+
+  // Parse bait string back into array
+  const baitArr = t.bait ? t.bait.split(',').map(b => b.trim()).filter(Boolean) : [];
+
+  formData = {
+    id: t.id,
+    isCompleting: false,
+    isEditing: true,
+    date: t.date || '',
+    locationName: t.location_name || '',
+    locationType: t.location_type || '',
+    latitude: t.latitude || '',
+    longitude: t.longitude || '',
+    startTime: t.start_time || '',
+    endTime: t.end_time || '',
+    companions: textCompanions,
+    companionUserIds: companionUserIds,
+    separateCounts: hasSeparate,
+    catches: personCatches.map(c => ({ species: c.species, count: c.count, person: c.person })),
+    groupCatches: groupCatches.map(c => ({ species: c.species, count: c.count })),
+    bait: baitArr,
+    wind: t.wind || '',
+    sky: t.sky || '',
+    notes: t.notes || '',
+    cSpecies: '', cCount: '', cPerson: 'Group', customSpecies: ''
+  };
+  pendingPhotos = [];
+  formStep = 0;
   setView('new');
 }
 
@@ -708,18 +773,20 @@ function startNew() {
 const TOTAL_STEPS=5;
 function renderForm() {
   const steps=[renderStep0,renderStep1,renderStep2,renderStep3,renderStep4];
+  const isEdit = formData.isEditing;
   const dots=[0,1,2,3,4].map(i=>`<div class="step-dot ${i===formStep?'active':i<formStep?'done':'pending'}"></div>`).join('');
   return `<div class="form-header">
-    <button class="btn-cancel" onclick="setView('log')">✕ Cancel</button>
+    <button class="btn-cancel" onclick="${isEdit?'setView(\'detail\')':'setView(\'log\')'}">${isEdit?'← Back to Outing':'✕ Cancel'}</button>
     <div class="step-dots">${dots}</div>
     <span style="color:#6a8a50;font-size:13px">${formStep+1} / ${TOTAL_STEPS}</span>
   </div>
+  ${isEdit?`<div style="background:#1a2a0a;border:1px solid #4a7a20;border-radius:8px;padding:10px 14px;margin-bottom:16px;color:#8aaa60;font-size:13px">✏️ Editing outing — all changes will be saved when you tap Save.</div>`:''}
   ${steps[formStep]()}
   <div class="form-btns">
     ${formStep>0?`<button class="btn btn-secondary" style="flex:1" onclick="formStepChange(-1)">← Back</button>`:''}
     ${formStep<TOTAL_STEPS-1
       ?`<button class="btn btn-primary" style="flex:2" onclick="formStepChange(1)">Next →</button>`
-      :`<button class="btn btn-primary btn-full" id="btnSave" onclick="saveOuting()">✅ Save Outing</button>`}
+      :`<button class="btn btn-primary btn-full" id="btnSave" onclick="saveOuting()">${isEdit?'✅ Save Changes':'✅ Save Outing'}</button>`}
   </div>`;
 }
 
@@ -918,10 +985,15 @@ async function saveOuting() {
   const outing={id:outingId,user_id:currentUser.id,user_name:fullName(currentUser),date:formData.date,location_name:formData.locationName,location_type:formData.locationType,latitude:formData.latitude,longitude:formData.longitude,start_time:formData.startTime,end_time:formData.endTime,bait:formData.bait.join(', '),wind:formData.wind,sky:formData.sky,notes:formData.notes,status:'complete',created_at:now};
 
   try {
-    if(formData.isCompleting){
+    if(formData.isCompleting || formData.isEditing){
       await sbUpdate('FishingTrips',outingId,outing);
       const idx=outings.findIndex(t=>t.id===outingId);
       if(idx>=0) outings[idx]={...outings[idx],...outing};
+      // Delete old catches and re-save fresh ones
+      if (formData.isEditing) {
+        for (const c of catches[outingId]||[]) { try { await sbDelete('FishingCatches',c.id); } catch {} }
+        catches[outingId] = [];
+      }
     } else {
       await sbInsert('FishingTrips',outing);
       outings.unshift(outing);
