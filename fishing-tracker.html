@@ -12,7 +12,6 @@
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-width: 480px; margin: 0 auto; min-height: 100vh; }
 
-/* Header */
 .header { background: linear-gradient(135deg, #0a1a0a, #1a2d0a); border-bottom: 1px solid #2a4a1a; padding: 14px 18px 0; position: sticky; top: 0; z-index: 10; }
 .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .logo { font-size: 22px; color: #c8e6a0; font-weight: bold; letter-spacing: 1px; }
@@ -30,15 +29,14 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 .user-name-label { color: #8aaa60; font-size: 12px; }
 .switch-user { background: none; border: 1px solid #3a5a1a; border-radius: 10px; color: #6a8a50; font-size: 11px; padding: 3px 8px; cursor: pointer; margin-left: auto; }
 
-/* Body */
 .body { padding: 20px 16px 100px; }
 
-/* Buttons */
 .btn { border-radius: 10px; padding: 13px 18px; font-size: 15px; cursor: pointer; border: none; font-weight: bold; display: inline-block; text-align: center; }
 .btn-primary { background: linear-gradient(135deg, #4a7a20, #6aaa30); color: #fff; }
 .btn-secondary { background: transparent; color: #6a8a50; border: 1px solid #4a6a2a; }
 .btn-ghost { background: #1a2a1a; color: #c8e6a0; border: 1px solid #3a5a1a; }
 .btn-orange { background: linear-gradient(135deg, #8a4a00, #c87020); color: #fff; border: none; }
+.btn-danger { background: #3a1010; color: #e07070; border: 1px solid #6a2020; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn-full { width: 100%; }
 
@@ -53,11 +51,14 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 .outing-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
 .outing-angler { display: flex; align-items: center; gap: 6px; }
 .angler-dot { width: 8px; height: 8px; border-radius: 50%; }
-.angler-name-small { color: #6a8a50; font-size: 12px; }
 .outing-fish { display: flex; align-items: baseline; gap: 4px; }
 .outing-fish-num { color: #f0c040; font-size: 22px; font-weight: bold; }
 .outing-fish-label { color: #6a8a50; font-size: 11px; }
 .outing-del { position: absolute; top: 12px; right: 12px; background: rgba(80,20,10,0.5); border: none; color: #c07060; font-size: 15px; cursor: pointer; width: 26px; height: 26px; border-radius: 13px; display: flex; align-items: center; justify-content: center; }
+
+/* Photo thumbnails on card */
+.card-photos { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.card-photo { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid #3a5a1a; cursor: pointer; }
 
 /* Form */
 .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
@@ -70,7 +71,8 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 .step-sub { color: #6a8a50; font-size: 13px; margin-bottom: 16px; }
 .field { margin-bottom: 18px; }
 .field-label { color: #6a8a50; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-.field input, .field textarea { width: 100%; background: #111e11; border: 1px solid #3a5a1a; border-radius: 8px; padding: 13px 14px; color: #c8e6a0; font-size: 16px; outline: none; font-family: inherit; }
+.field input, .field textarea, .field select { width: 100%; background: #111e11; border: 1px solid #3a5a1a; border-radius: 8px; padding: 13px 14px; color: #c8e6a0; font-size: 16px; outline: none; font-family: inherit; }
+.field select option { background: #1a2a1a; }
 .field textarea { min-height: 90px; resize: vertical; }
 .field-row { display: flex; gap: 10px; }
 .field-row .field { flex: 1; }
@@ -94,6 +96,15 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 .companion-item { display: flex; justify-content: space-between; align-items: center; background: #1a2a1a; border: 1px solid #3a5a1a; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; }
 .sep-box { margin-top: 16px; background: #1a2a1a; border: 1px solid #3a5a1a; border-radius: 10px; padding: 16px; }
 
+/* Photo upload */
+.photo-upload-area { border: 2px dashed #3a5a1a; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; margin-bottom: 14px; background: #0d160d; }
+.photo-upload-area:active { border-color: #6aaa30; background: #1a2a1a; }
+.photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.photo-thumb { position: relative; aspect-ratio: 1; }
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 1px solid #3a5a1a; }
+.photo-thumb-del { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); border: none; color: #e07070; font-size: 14px; cursor: pointer; width: 22px; height: 22px; border-radius: 11px; display: flex; align-items: center; justify-content: center; }
+.upload-progress { background: #1a2a1a; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; color: #8aaa60; font-size: 13px; }
+
 /* Detail */
 .detail-back { background: none; border: none; color: #6a8a50; font-size: 16px; cursor: pointer; padding: 0 0 18px 0; display: block; }
 .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
@@ -105,6 +116,13 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 .catch-detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #3a5a1a; }
 .saved-badge { margin-top: 20px; background: #0a1a0a; border: 1px solid #3a5a1a; border-radius: 10px; padding: 12px; color: #6aaa30; font-size: 13px; }
 .draft-banner { background: #2a1a0a; border: 1px solid #8a6a20; border-radius: 10px; padding: 14px; margin-bottom: 18px; }
+
+/* Photo gallery in detail */
+.photo-gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 4px; }
+.gallery-photo { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 10px; border: 1px solid #3a5a1a; cursor: pointer; }
+.photo-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.photo-lightbox img { max-width: 100%; max-height: 90vh; border-radius: 8px; object-fit: contain; }
+.lightbox-close { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.2); border: none; color: #fff; font-size: 24px; cursor: pointer; width: 40px; height: 40px; border-radius: 20px; display: flex; align-items: center; justify-content: center; }
 
 /* Stats */
 .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
@@ -125,17 +143,10 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 
 /* Auth */
 .auth-screen { padding: 32px 24px; text-align: center; }
-.auth-icon { font-size: 56px; margin-bottom: 16px; }
-.auth-title { color: #c8e6a0; font-size: 26px; font-weight: bold; margin-bottom: 8px; }
-.auth-sub { color: #6a8a50; font-size: 14px; margin-bottom: 28px; line-height: 1.6; }
-.auth-divider { color: #3a5a1a; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; margin: 16px 0; }
 .user-option { display: flex; align-items: center; gap: 12px; background: #1a2a1a; border: 1px solid #3a5a1a; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; text-align: left; width: 100%; }
 .user-option:active { border-color: #6aaa30; }
 .user-option-dot { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; }
-.user-option-name { color: #c8e6a0; font-size: 16px; font-weight: bold; }
-.user-option-sub { color: #6a8a50; font-size: 12px; }
-
-/* PIN */
+.auth-divider { color: #3a5a1a; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; margin: 16px 0; }
 .pin-dots { display: flex; gap: 14px; justify-content: center; margin: 20px 0; }
 .pin-dot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #4a6a2a; background: transparent; transition: all 0.15s; }
 .pin-dot.filled { background: #6aaa30; border-color: #6aaa30; }
@@ -143,9 +154,6 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 .numpad-btn { background: #1a2a1a; border: 1px solid #3a5a1a; border-radius: 10px; color: #c8e6a0; font-size: 22px; padding: 16px; cursor: pointer; font-weight: bold; }
 .numpad-btn:active { background: #2a4a1a; }
 .numpad-btn.del { color: #8a5a50; font-size: 18px; }
-.pin-error { color: #e07070; font-size: 13px; min-height: 24px; margin: 8px 0; }
-
-/* Register */
 .color-options { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
 .color-opt { width: 38px; height: 38px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: transform 0.15s; }
 .color-opt.selected { border-color: #fff; transform: scale(1.15); }
@@ -153,11 +161,8 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 .icon-opt { font-size: 30px; cursor: pointer; padding: 6px; border-radius: 8px; border: 2px solid transparent; }
 .icon-opt.selected { border-color: #6aaa30; background: #1a2a1a; }
 
-/* Onboarding / Home Screen */
-.onboard-card { background: linear-gradient(135deg, #1a2a0a, #2a3a10); border: 1px solid #4a7a20; border-radius: 16px; padding: 22px; margin-bottom: 16px; text-align: center; }
-.onboard-title { color: #f0c040; font-size: 18px; font-weight: bold; margin-bottom: 10px; }
-.onboard-sub { color: #8aaa60; font-size: 13px; line-height: 1.7; margin-bottom: 18px; }
-.onboard-steps { text-align: left; margin-bottom: 18px; }
+/* Onboarding */
+.onboard-card { background: linear-gradient(135deg, #1a2a0a, #2a3a10); border: 1px solid #4a7a20; border-radius: 16px; padding: 22px; margin-bottom: 16px; }
 .onboard-step { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
 .onboard-num { background: #4a7a20; color: #fff; width: 26px; height: 26px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; flex-shrink: 0; margin-top: 1px; }
 .onboard-text { color: #c8e6a0; font-size: 14px; line-height: 1.5; }
@@ -172,10 +177,9 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 .faq-q-text { color: #c8e6a0; font-size: 14px; font-weight: bold; padding-right: 10px; }
 .faq-arrow { color: #6a8a50; font-size: 16px; transition: transform 0.2s; flex-shrink: 0; }
 .faq-arrow.open { transform: rotate(180deg); }
-.faq-answer { padding: 0 16px 14px; color: #8aaa60; font-size: 13px; line-height: 1.7; display: none; }
+.faq-answer { padding: 0 16px 14px; color: #8aaa60; font-size: 13px; line-height: 1.7; display: none; white-space: pre-line; }
 .faq-answer.open { display: block; }
 
-/* Empty */
 .empty { text-align: center; padding: 60px 20px; }
 .empty-icon { font-size: 56px; margin-bottom: 18px; }
 .empty-title { color: #6aaa30; font-size: 22px; margin-bottom: 8px; }
@@ -185,26 +189,35 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 </head>
 <body>
 <div id="app"></div>
+<div id="lightbox" class="photo-lightbox" style="display:none" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="Photo">
+</div>
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-const VERSION = 'v2.0 · 2026-04-29';
+const VERSION = 'v2.1 · 2026-05-01';
 const WORKER_URL = 'https://grasse-apps-proxy.ed-53c.workers.dev';
 const APP_ID = 'fishinglog';
+const SUPABASE_URL = 'https://viprflxaudxjwsvytrnn.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_kkR-mwmqJ26-Yu5BXZC17A_UIrw7782';
+const STORAGE_BUCKET = 'fishing-photos';
 
-const SPECIES = ["Yellow Perch","Walleye","Crappie","Largemouth Bass","Northern Pike","Muskie","Bluegill/Panfish","Catfish","Other"];
-const LOC_TYPES = ["My Boathouse/Channel","Bridge","Boat - Mine","Boat - Other's","Shore","Pier/Dock","Ice","Other"];
+const LOC_TYPES = ["Channel/River","Bridge","Boat","Shore","Pier/Dock","Ice","Other"];
 const BAITS = ["Rosie Red Minnows","Live Minnows","Nightcrawlers","Leeches","Spinnerbait","Jerkbait","Swimbait","Jig","Crankbait","Other"];
 const WIND = ["Calm","Light Breeze","Moderate Wind","Strong Wind"];
 const SKY = ["Sunny","Partly Cloudy","Overcast","Foggy","Rainy"];
 const COLORS = ["#6aaa30","#e05050","#5080e0","#e09020","#9050e0","#20a0c0","#e05090","#50a070"];
 const ICONS = ["🎣","🐟","🦈","⚓","🚤","🏕️","🌊","🏆"];
+const DEFAULT_SPECIES = ["Yellow Perch","Walleye","Crappie","Largemouth Bass","Smallmouth Bass","Northern Pike","Muskie","Bluegill","Catfish","Trout"];
 
-// ── STATE ──────────────────────────────────────────────────────
+// ── STATE ─────────────────────────────────────────────────────
 let currentUser = null;
 let currentView = 'log';
 let outings = [];
 let catches = {};
+let photos = {};
 let users = [];
+let species = [...DEFAULT_SPECIES];
 let selectedOuting = null;
 let showAllUsers = false;
 let formData = {};
@@ -213,10 +226,11 @@ let pinBuffer = '';
 let pinTarget = null;
 let registerData = {};
 let faqOpen = {};
+let pendingPhotos = []; // {file, previewUrl, uploaded, url}
 
 try { const s = localStorage.getItem('fishlog-user'); if (s) currentUser = JSON.parse(s); } catch {}
 
-// ── WORKER ────────────────────────────────────────────────────
+// ── WORKER (tables) ───────────────────────────────────────────
 async function workerCall(payload) {
   const r = await fetch(WORKER_URL, {
     method: 'POST',
@@ -227,7 +241,7 @@ async function workerCall(payload) {
   const json = await r.json();
   if (Array.isArray(json)) return { data: json };
   if (json.data !== undefined) return json;
-  if (json.error) throw new Error('Supabase error: ' + json.error);
+  if (json.error) throw new Error(json.error);
   return { data: [] };
 }
 async function sbGet(table, filters) { return workerCall({ method: 'SELECT', table, filters: filters || '' }); }
@@ -235,6 +249,27 @@ async function sbInsert(table, row) { return workerCall({ method: 'INSERT', tabl
 async function sbDelete(table, id) { return workerCall({ method: 'DELETE', table, idField: 'id', idValue: id }); }
 async function sbUpdate(table, id, row) { return workerCall({ method: 'UPDATE', table, data: row, idField: 'id', idValue: id }); }
 
+// ── SUPABASE STORAGE (photos) ─────────────────────────────────
+async function uploadPhoto(file, outingId) {
+  const ext = file.name.split('.').pop() || 'jpg';
+  const path = `${outingId}/${genId()}.${ext}`;
+  const r = await fetch(`${SUPABASE_URL}/storage/v1/object/${STORAGE_BUCKET}/${path}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type': file.type || 'image/jpeg',
+      'x-upsert': 'true'
+    },
+    body: file
+  });
+  if (!r.ok) {
+    const err = await r.text();
+    throw new Error('Upload failed: ' + err);
+  }
+  return `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${path}`;
+}
+
+// ── HELPERS ───────────────────────────────────────────────────
 function genId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 6); }
 function hashPin(pin) { let h = 0; for (let c of pin) { h = ((h << 5) - h) + c.charCodeAt(0); h |= 0; } return h.toString(16); }
 function fmtDate(d) { try { return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); } catch { return d; } }
@@ -244,31 +279,50 @@ function showMsg(msg, type, dur = 4000) {
   el.textContent = msg; el.className = 'save-msg ' + type;
   if (dur) setTimeout(() => { el.textContent = ''; el.className = 'save-msg'; }, dur);
 }
+function fullName(user) {
+  if (!user) return 'Unknown';
+  return user.last_name ? user.name + ' ' + user.last_name : user.name;
+}
 
 // ── DATA ──────────────────────────────────────────────────────
 async function loadData() {
   try {
-    const userRes = await sbGet('FishingUsers', 'order=name.asc');
+    const [userRes, tripRes, speciesRes] = await Promise.all([
+      sbGet('FishingUsers', 'order=name.asc'),
+      sbGet('FishingTrips', 'order=created_at.desc'),
+      sbGet('FishingSpecies', 'order=name.asc')
+    ]);
     users = userRes.data || [];
-    const tripRes = await sbGet('FishingTrips', 'order=created_at.desc');
     outings = tripRes.data || [];
+    const sp = speciesRes.data || [];
+    if (sp.length > 0) species = sp.map(s => s.name);
+
     if (outings.length > 0) {
-      const catchRes = await sbGet('FishingCatches', 'order=created_at.asc');
-      const all = catchRes.data || [];
+      const [catchRes, photoRes, sharedRes] = await Promise.all([
+        sbGet('FishingCatches', 'order=created_at.asc'),
+        sbGet('FishingPhotos', 'order=created_at.asc'),
+        sbGet('FishingSharedOutings', 'order=created_at.asc')
+      ]);
       catches = {};
-      all.forEach(c => { if (!catches[c.trip_id]) catches[c.trip_id] = []; catches[c.trip_id].push(c); });
+      (catchRes.data || []).forEach(c => { if (!catches[c.trip_id]) catches[c.trip_id] = []; catches[c.trip_id].push(c); });
+      photos = {};
+      (photoRes.data || []).forEach(p => { if (!photos[p.trip_id]) photos[p.trip_id] = []; photos[p.trip_id].push(p); });
+
+      // Add shared outings to visible set
+      const sharedTripIds = new Set((sharedRes.data || []).filter(s => s.user_id === currentUser?.id).map(s => s.trip_id));
+      outings.forEach(o => { if (sharedTripIds.has(o.id)) o._shared = true; });
     }
   } catch(e) { console.error('Load error', e); }
 }
 
 function getVisibleOutings() {
   if (showAllUsers || !currentUser || currentUser.readonly) return outings;
-  return outings.filter(t => t.user_id === currentUser.id);
+  return outings.filter(t => t.user_id === currentUser.id || t._shared);
 }
 function outingTotal(id) { return (catches[id] || []).reduce((s, c) => s + (parseInt(c.count) || 0), 0); }
 function userById(id) { return users.find(u => u.id === id); }
 function userColor(id) { const u = userById(id); return u ? u.color : '#6aaa30'; }
-function userName(id) { const u = userById(id); return u ? u.name : 'Unknown'; }
+function userDisplayName(id) { const u = userById(id); return u ? fullName(u) : 'Unknown'; }
 
 // ── RENDER ────────────────────────────────────────────────────
 function render() {
@@ -276,7 +330,6 @@ function render() {
   const isAuth = !currentUser || ['auth','register','pin','onboard'].includes(currentView);
   if (isAuth) { app.innerHTML = renderAuth(); return; }
 
-  const showHeader = ['log','stats','faq'].includes(currentView);
   app.innerHTML = `
     <div class="header">
       <div class="header-top">
@@ -291,10 +344,10 @@ function render() {
       </div>
       <div class="user-badge">
         <div class="user-dot" style="background:${currentUser.color}"></div>
-        <span class="user-name-label">${currentUser.icon} ${currentUser.name}</span>
+        <span class="user-name-label">${currentUser.icon} ${fullName(currentUser)}</span>
         <button class="switch-user" onclick="switchUser()">Switch</button>
       </div>
-      ${showHeader ? `<div class="tabs">
+      ${['log','stats','faq'].includes(currentView) ? `<div class="tabs">
         <button class="tab ${currentView==='log'?'active':''}" onclick="setView('log')">🎣 Outings</button>
         <button class="tab ${currentView==='stats'?'active':''}" onclick="setView('stats')">📊 Stats</button>
         <button class="tab ${currentView==='faq'?'active':''}" onclick="setView('faq')">❓ Help</button>
@@ -317,41 +370,37 @@ function renderAuth() {
   if (currentView === 'pin') return renderPin();
   if (currentView === 'onboard') return renderOnboard();
 
-  const hasUsers = users.length > 0;
   return `<div style="padding:20px 16px 40px">
     <div style="text-align:center;padding:32px 0 24px">
       <div style="font-size:60px;margin-bottom:14px">🎣</div>
       <div style="color:#c8e6a0;font-size:28px;font-weight:bold;margin-bottom:6px">Fish Log</div>
       <div style="color:#6a8a50;font-size:13px">${VERSION}</div>
     </div>
-    ${hasUsers ? `
+    ${users.length > 0 ? `
     <div style="color:#6a8a50;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Returning angler?</div>
     <div style="margin-bottom:20px">
       ${users.map(u => `<button class="user-option" onclick="selectUser('${u.id}')">
         <div class="user-option-dot" style="background:${u.color}"></div>
-        <div><div class="user-option-name">${u.icon} ${u.name}</div><div class="user-option-sub">Tap to enter secret code</div></div>
+        <div><div style="color:#c8e6a0;font-size:16px;font-weight:bold">${u.icon} ${fullName(u)}</div><div style="color:#6a8a50;font-size:12px">Tap to enter secret code</div></div>
       </button>`).join('')}
     </div>
     <div class="auth-divider">— or —</div>` : ''}
-    <button class="btn btn-primary btn-full" onclick="startRegister()" style="margin-bottom:12px;margin-top:${hasUsers?'12px':'0'}">
-      ${hasUsers ? '+ New Angler' : '🎣 Get Started — Create Your Profile'}
+    <button class="btn btn-primary btn-full" onclick="startRegister()" style="margin-bottom:12px;margin-top:${users.length?'12px':'0'}">
+      ${users.length ? '+ New Angler' : '🎣 Get Started — Create Your Profile'}
     </button>
     <button class="btn btn-ghost btn-full" onclick="viewOnly()">👁 View Only (no code needed)</button>
   </div>`;
 }
 
 function renderPin() {
-  const filled = pinBuffer.length;
   return `<div class="auth-screen">
-    <div style="font-size:50px;margin-bottom:12px">${pinTarget ? pinTarget.icon : '🎣'}</div>
-    <div style="color:#c8e6a0;font-size:22px;font-weight:bold;margin-bottom:4px">${pinTarget ? pinTarget.name : ''}</div>
+    <div style="font-size:50px;margin-bottom:12px">${pinTarget?.icon || '🎣'}</div>
+    <div style="color:#c8e6a0;font-size:22px;font-weight:bold;margin-bottom:4px">${pinTarget ? fullName(pinTarget) : ''}</div>
     <div style="color:#6a8a50;font-size:14px;margin-bottom:4px">Enter your 4-digit secret code</div>
-    <div class="pin-dots">
-      ${[0,1,2,3].map(i => `<div class="pin-dot ${i < filled ? 'filled' : ''}"></div>`).join('')}
-    </div>
-    <div class="pin-error" id="pinErr"></div>
+    <div class="pin-dots">${[0,1,2,3].map(i=>`<div class="pin-dot ${i<pinBuffer.length?'filled':''}"></div>`).join('')}</div>
+    <div style="color:#e07070;font-size:13px;min-height:24px;margin:8px 0" id="pinErr"></div>
     <div class="numpad">
-      ${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(n => `<button class="numpad-btn ${n==='⌫'?'del':''}" onclick="pinPress('${n}')">${n}</button>`).join('')}
+      ${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(n=>`<button class="numpad-btn ${n==='⌫'?'del':''}" onclick="pinPress('${n}')">${n}</button>`).join('')}
     </div>
     <button class="btn btn-secondary" style="margin-top:20px;width:100%" onclick="setView('auth')">← Back</button>
   </div>`;
@@ -362,198 +411,146 @@ function renderRegister() {
     <button class="btn-cancel" onclick="setView('auth')" style="margin-bottom:16px">← Back</button>
     <div style="color:#c8e6a0;font-size:22px;font-weight:bold;margin-bottom:4px">Create Your Profile</div>
     <div style="color:#6a8a50;font-size:13px;margin-bottom:24px">Takes about 30 seconds!</div>
-    <div class="field">
-      <div class="field-label">Your First Name</div>
-      <input type="text" id="regName" placeholder="e.g. Ed" value="${registerData.name||''}" autocomplete="off">
+    <div class="field-row">
+      <div class="field"><div class="field-label">First Name</div><input type="text" id="regFirst" placeholder="Ed" value="${registerData.name||''}" autocomplete="off"></div>
+      <div class="field"><div class="field-label">Last Name</div><input type="text" id="regLast" placeholder="Smith" value="${registerData.last_name||''}" autocomplete="off"></div>
     </div>
     <div class="chips-label">Pick your color</div>
-    <div class="color-options">
-      ${COLORS.map(c => `<div class="color-opt ${registerData.color===c?'selected':''}" style="background:${c}" onclick="registerData.color='${c}';render()"></div>`).join('')}
-    </div>
+    <div class="color-options">${COLORS.map(c=>`<div class="color-opt ${registerData.color===c?'selected':''}" style="background:${c}" onclick="registerData.color='${c}';render()"></div>`).join('')}</div>
     <div class="chips-label">Pick your icon</div>
-    <div class="icon-options">
-      ${ICONS.map(ic => `<div class="icon-opt ${registerData.icon===ic?'selected':''}" onclick="registerData.icon='${ic}';render()">${ic}</div>`).join('')}
-    </div>
+    <div class="icon-options">${ICONS.map(ic=>`<div class="icon-opt ${registerData.icon===ic?'selected':''}" onclick="registerData.icon='${ic}';render()">${ic}</div>`).join('')}</div>
     <div class="field">
       <div class="field-label">Choose a 4-digit secret code</div>
-      <input type="number" id="regPin" placeholder="4 digits you'll remember" style="letter-spacing:8px;font-size:20px">
-      <div style="color:#6a8a50;font-size:12px;margin-top:6px">You'll need this to log outings. If you forget it, just ask Ed.</div>
+      <input type="number" id="regPin" placeholder="4 digits you will remember" style="letter-spacing:8px;font-size:20px">
+      <div style="color:#6a8a50;font-size:12px;margin-top:6px">You will need this to log outings. If you forget it, just ask Ed.</div>
     </div>
     <button class="btn btn-primary btn-full" onclick="createUser()" style="margin-bottom:12px">Create My Profile →</button>
   </div>`;
 }
 
 function renderOnboard() {
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const isAndroid = /Android/.test(navigator.userAgent);
-  const device = isIOS ? 'iphone' : isAndroid ? 'android' : 'iphone';
-  const [activeDevice, setActiveDevice] = [
-    registerData.onboardDevice || device,
-    d => { registerData.onboardDevice = d; render(); }
-  ];
-
+  const activeDevice = registerData.onboardDevice || (/Android/.test(navigator.userAgent) ? 'android' : 'iphone');
   const steps = {
     iphone: [
-      { text: 'Tap the Share button at the bottom of Safari', note: 'It looks like a box with an arrow pointing up ↑' },
-      { text: 'Scroll down and tap "Add to Home Screen"', note: '' },
-      { text: 'Tap "Add" in the top right corner', note: '' },
-      { text: 'Look for the Fish Log icon on your home screen!', note: '🎣 Tap it anytime to open the app' }
+      {text:'Tap the Share button at the bottom of Safari',note:'It looks like a box with an arrow pointing up ↑'},
+      {text:'Scroll down and tap "Add to Home Screen"',note:''},
+      {text:'Tap "Add" in the top right corner',note:''},
+      {text:'Look for the Fish Log icon on your home screen!',note:'🎣 Tap it anytime to open the app'}
     ],
     android: [
-      { text: 'Tap the three-dot menu ⋮ in the top right of Chrome', note: '' },
-      { text: 'Tap "Add to Home Screen"', note: '' },
-      { text: 'Tap "Add" when prompted', note: '' },
-      { text: 'Look for the Fish Log icon on your home screen!', note: '🎣 Tap it anytime to open the app' }
+      {text:'Tap the three-dot menu ⋮ in the top right of Chrome',note:''},
+      {text:'Tap "Add to Home Screen"',note:''},
+      {text:'Tap "Add" when prompted',note:''},
+      {text:'Look for the Fish Log icon on your home screen!',note:'🎣 Tap it anytime to open the app'}
     ]
   };
-
   return `<div style="padding:24px 20px 40px">
     <div style="text-align:center;margin-bottom:24px">
       <div style="font-size:50px;margin-bottom:12px">🎉</div>
       <div style="color:#c8e6a0;font-size:22px;font-weight:bold;margin-bottom:8px">You're all set, ${registerData.createdName || 'Angler'}!</div>
-      <div style="color:#6a8a50;font-size:14px;line-height:1.6">Add Fish Log to your home screen so you can open it with one tap — just like a real app.</div>
+      <div style="color:#6a8a50;font-size:14px;line-height:1.6">Add Fish Log to your home screen for one-tap access.</div>
     </div>
     <div class="device-tabs">
       <div class="device-tab ${activeDevice==='iphone'?'active':''}" onclick="registerData.onboardDevice='iphone';render()">📱 iPhone / iPad</div>
       <div class="device-tab ${activeDevice==='android'?'active':''}" onclick="registerData.onboardDevice='android';render()">🤖 Android</div>
     </div>
     <div class="onboard-card">
-      <div class="onboard-title">Add to Home Screen</div>
-      <div class="onboard-steps">
-        ${steps[activeDevice].map((s, i) => `<div class="onboard-step">
-          <div class="onboard-num">${i+1}</div>
-          <div>
-            <div class="onboard-text">${s.text}</div>
-            ${s.note ? `<div class="onboard-note">${s.note}</div>` : ''}
-          </div>
-        </div>`).join('')}
-      </div>
+      <div style="color:#f0c040;font-size:16px;font-weight:bold;margin-bottom:14px;text-align:center">Add to Home Screen</div>
+      ${steps[activeDevice].map((s,i)=>`<div class="onboard-step">
+        <div class="onboard-num">${i+1}</div>
+        <div><div class="onboard-text">${s.text}</div>${s.note?`<div class="onboard-note">${s.note}</div>`:''}</div>
+      </div>`).join('')}
     </div>
-    <button class="btn btn-primary btn-full" onclick="finishOnboard()" style="margin-bottom:12px">Got it — Start Fishing! 🎣</button>
+    <button class="btn btn-primary btn-full" onclick="setView('log')" style="margin-bottom:12px">Got it — Start Fishing! 🎣</button>
     <button class="btn btn-ghost btn-full" onclick="setView('log')">Skip for now</button>
   </div>`;
 }
 
-function finishOnboard() {
-  setView('log');
-}
-
-async function selectUser(id) {
-  pinTarget = users.find(u => u.id === id);
-  pinBuffer = '';
-  setView('pin');
-}
-
+async function selectUser(id) { pinTarget = users.find(u=>u.id===id); pinBuffer=''; setView('pin'); }
 function pinPress(n) {
-  if (n === '⌫') { pinBuffer = pinBuffer.slice(0, -1); render(); return; }
-  if (n === '' || pinBuffer.length >= 4) return;
-  pinBuffer += n;
-  render();
-  if (pinBuffer.length === 4) setTimeout(verifyPin, 100);
+  if (n==='⌫') { pinBuffer=pinBuffer.slice(0,-1); render(); return; }
+  if (n===''||pinBuffer.length>=4) return;
+  pinBuffer+=n; render();
+  if (pinBuffer.length===4) setTimeout(verifyPin,100);
 }
-
 async function verifyPin() {
-  if (hashPin(pinBuffer) === pinTarget.pin_hash) {
-    currentUser = pinTarget;
-    try { localStorage.setItem('fishlog-user', JSON.stringify(currentUser)); } catch {}
-    pinBuffer = '';
-    showMsg('Welcome back, ' + currentUser.name + '!', 'ok');
+  if (hashPin(pinBuffer)===pinTarget.pin_hash) {
+    currentUser=pinTarget;
+    try { localStorage.setItem('fishlog-user',JSON.stringify(currentUser)); } catch {}
+    pinBuffer='';
+    showMsg('Welcome back, '+fullName(currentUser)+'!','ok');
     setView('log');
   } else {
-    pinBuffer = '';
-    const err = document.getElementById('pinErr');
-    if (err) err.textContent = '❌ Wrong secret code — try again';
+    pinBuffer='';
+    const err=document.getElementById('pinErr');
+    if (err) err.textContent='❌ Wrong secret code — try again';
     render();
   }
 }
-
-function switchUser() {
-  currentUser = null;
-  try { localStorage.removeItem('fishlog-user'); } catch {}
-  setView('auth');
-}
-
-function viewOnly() {
-  currentUser = { id: 'readonly', name: 'Viewer', color: '#6a8a50', icon: '👁', pin_hash: '', readonly: true };
-  setView('log');
-}
-
-function startRegister() {
-  registerData = { color: COLORS[0], icon: ICONS[0] };
-  setView('register');
-}
-
+function switchUser() { currentUser=null; try{localStorage.removeItem('fishlog-user');}catch{} setView('auth'); }
+function viewOnly() { currentUser={id:'readonly',name:'Viewer',last_name:'',color:'#6a8a50',icon:'👁',pin_hash:'',readonly:true}; setView('log'); }
+function startRegister() { registerData={color:COLORS[0],icon:ICONS[0]}; setView('register'); }
 async function createUser() {
-  const name = document.getElementById('regName')?.value?.trim();
-  const pinVal = document.getElementById('regPin')?.value?.trim();
-  if (!name) { alert('Please enter your first name'); return; }
-  if (!pinVal || pinVal.length !== 4 || isNaN(pinVal)) { alert('Please enter a 4-digit secret code'); return; }
-  if (!registerData.color) { alert('Please pick a color'); return; }
-  if (!registerData.icon) { alert('Please pick an icon'); return; }
-
-  const newUser = {
-    id: genId(),
-    name,
-    pin_hash: hashPin(pinVal),
-    color: registerData.color,
-    icon: registerData.icon,
-    created_at: new Date().toISOString()
-  };
-
+  const first=document.getElementById('regFirst')?.value?.trim();
+  const last=document.getElementById('regLast')?.value?.trim()||'';
+  const pinVal=document.getElementById('regPin')?.value?.trim();
+  if (!first){alert('Please enter your first name');return;}
+  if (!pinVal||pinVal.length!==4||isNaN(pinVal)){alert('Please enter a 4-digit secret code');return;}
+  if (!registerData.color){alert('Please pick a color');return;}
+  if (!registerData.icon){alert('Please pick an icon');return;}
+  const newUser={id:genId(),name:first,last_name:last,pin_hash:hashPin(pinVal),color:registerData.color,icon:registerData.icon,created_at:new Date().toISOString()};
   try {
-    await sbInsert('FishingUsers', newUser);
+    await sbInsert('FishingUsers',newUser);
     users.push(newUser);
-    currentUser = newUser;
-    try { localStorage.setItem('fishlog-user', JSON.stringify(currentUser)); } catch {}
-    registerData.createdName = name;
+    currentUser=newUser;
+    try{localStorage.setItem('fishlog-user',JSON.stringify(currentUser));}catch{}
+    registerData.createdName=first;
     setView('onboard');
-  } catch(e) { alert('Error creating profile: ' + e.message); }
+  } catch(e){alert('Error creating profile: '+e.message);}
 }
 
 // ── LOG VIEW ──────────────────────────────────────────────────
 function renderLog() {
-  const visible = getVisibleOutings();
-  const drafts = visible.filter(t => t.status === 'draft');
-  const complete = visible.filter(t => t.status !== 'draft');
-  const isReadonly = currentUser?.readonly;
-
+  const visible=getVisibleOutings();
+  const drafts=visible.filter(t=>t.status==='draft');
+  const complete=visible.filter(t=>t.status!=='draft');
   return `
     <div class="view-toggle">
       <button class="view-toggle-btn ${!showAllUsers?'active':''}" onclick="showAllUsers=false;render()">My Outings</button>
       <button class="view-toggle-btn ${showAllUsers?'active':''}" onclick="showAllUsers=true;render()">All Anglers</button>
     </div>
-    ${drafts.length ? `<div style="color:#f0c040;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📍 Saved Spots — Tap to Complete</div>
-    ${drafts.map((t,i) => renderCard(t)).join('')}
-    <div style="color:#4a6a2a;font-size:11px;margin:8px 0 14px;text-transform:uppercase;letter-spacing:1px">Completed Outings</div>` : ''}
-    ${complete.length ? complete.map(t => renderCard(t)).join('') :
-      `<div class="empty">
-        <div class="empty-icon">🎣</div>
-        <div class="empty-title">${showAllUsers ? 'No outings yet' : 'No outings logged'}</div>
-        <div class="empty-sub">${isReadonly ? 'Switch to your angler profile to log outings' : 'Tap + Outing to log a trip or 📍 Spot to save your GPS location right now'}</div>
-        ${!isReadonly ? `<button class="btn btn-primary" onclick="startNew()">+ Log First Outing</button>` : ''}
-      </div>`}`;
+    ${drafts.length?`<div style="color:#f0c040;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📍 Saved Spots — Tap to Complete</div>
+    ${drafts.map(t=>renderCard(t)).join('')}
+    <div style="color:#4a6a2a;font-size:11px;margin:8px 0 14px;text-transform:uppercase;letter-spacing:1px">Completed Outings</div>`:''}
+    ${complete.length?complete.map(t=>renderCard(t)).join(''):
+    `<div class="empty">
+      <div class="empty-icon">🎣</div>
+      <div class="empty-title">${showAllUsers?'No outings yet':'No outings logged'}</div>
+      <div class="empty-sub">${currentUser?.readonly?'Switch to your angler profile to log outings':'Tap + Outing to log or 📍 Spot to save your GPS location now'}</div>
+      ${!currentUser?.readonly?`<button class="btn btn-primary" onclick="startNew()">+ Log First Outing</button>`:''}
+    </div>`}`;
 }
 
 function renderCard(t) {
-  const total = outingTotal(t.id);
-  const tc = catches[t.id] || [];
-  const species = [...new Set(tc.map(c => c.species))];
-  const isOwn = t.user_id === currentUser?.id && !currentUser?.readonly;
-  const uColor = userColor(t.user_id);
-  const uName = userName(t.user_id);
-
+  const total=outingTotal(t.id);
+  const tc=catches[t.id]||[];
+  const tp=photos[t.id]||[];
+  const sp=[...new Set(tc.map(c=>c.species))];
+  const isOwn=t.user_id===currentUser?.id&&!currentUser?.readonly;
   return `<div class="outing-card ${t.status==='draft'?'draft':''}" onclick="openOuting('${t.id}')">
-    ${isOwn ? `<button class="outing-del" onclick="event.stopPropagation();deleteOuting('${t.id}')">✕</button>` : ''}
-    <div class="outing-name">${t.location_name || t.location_type || (t.status==='draft'?'📍 Saved Spot':'Unnamed Spot')}</div>
+    ${isOwn?`<button class="outing-del" onclick="event.stopPropagation();deleteOuting('${t.id}')">✕</button>`:''}
+    <div class="outing-name">${t.location_name||t.location_type||(t.status==='draft'?'📍 Saved Spot':'Unnamed Spot')}</div>
     <div class="outing-meta">${fmtDate(t.date)}${t.location_type?' · '+t.location_type:''}</div>
     <div class="outing-tags">
-      ${t.status==='draft' ? '<span class="tag draft-tag">📍 Draft — tap to complete</span>' : ''}
-      ${species.map(s=>`<span class="tag">${s}</span>`).join('')}
+      ${t.status==='draft'?'<span class="tag draft-tag">📍 Draft — tap to complete</span>':''}
+      ${sp.map(s=>`<span class="tag">${s}</span>`).join('')}
+      ${t._shared?'<span class="tag" style="background:#2a3a5a">shared</span>':''}
     </div>
+    ${tp.length?`<div class="card-photos">${tp.slice(0,4).map(p=>`<img class="card-photo" src="${p.url}" onclick="event.stopPropagation();openLightbox('${p.url}')" loading="lazy">`).join('')}</div>`:''}
     <div class="outing-footer">
       <div class="outing-angler">
-        <div class="angler-dot" style="background:${uColor}"></div>
-        <span class="angler-name-small">${showAllUsers ? uName : (t.user_name || uName)}</span>
+        <div class="angler-dot" style="background:${userColor(t.user_id)}"></div>
+        <span style="color:#6a8a50;font-size:12px">${showAllUsers?userDisplayName(t.user_id):(t.user_name||userDisplayName(t.user_id))}</span>
       </div>
       <div class="outing-fish">
         <span class="outing-fish-num">${t.status==='draft'?'—':total}</span>
@@ -563,67 +560,52 @@ function renderCard(t) {
   </div>`;
 }
 
-async function openOuting(id) {
-  selectedOuting = outings.find(t => t.id === id);
-  if (!selectedOuting) return;
-  setView('detail');
-}
-
+async function openOuting(id) { selectedOuting=outings.find(t=>t.id===id); if(selectedOuting) setView('detail'); }
 async function deleteOuting(id) {
-  if (!confirm('Delete this outing and all its catches?\nThis cannot be undone.')) return;
-  showMsg('Deleting...', 'loading', 0);
+  if (!confirm('Delete this outing and all its catches and photos?\nThis cannot be undone.')) return;
+  showMsg('Deleting...','loading',0);
   try {
-    const tc = catches[id] || [];
-    for (const c of tc) await sbDelete('FishingCatches', c.id);
-    await sbDelete('FishingTrips', id);
-    outings = outings.filter(t => t.id !== id);
-    delete catches[id];
-    showMsg('✅ Deleted', 'ok');
-    render();
-  } catch(e) { showMsg('⚠️ Delete failed', 'warn'); }
+    for (const c of catches[id]||[]) await sbDelete('FishingCatches',c.id);
+    for (const p of photos[id]||[]) await sbDelete('FishingPhotos',p.id);
+    await sbDelete('FishingTrips',id);
+    outings=outings.filter(t=>t.id!==id);
+    delete catches[id]; delete photos[id];
+    showMsg('✅ Deleted','ok'); render();
+  } catch(e){showMsg('⚠️ Delete failed','warn');}
 }
 
 // ── QUICK SPOT ────────────────────────────────────────────────
 async function quickSpot() {
-  if (!navigator.geolocation) { alert('GPS not available on this device'); return; }
-  showMsg('📍 Getting location...', 'loading', 0);
-  navigator.geolocation.getCurrentPosition(async (pos) => {
-    const lat = pos.coords.latitude.toFixed(6);
-    const lng = pos.coords.longitude.toFixed(6);
-    const now = new Date();
-    const outing = {
-      id: genId(), user_id: currentUser.id, user_name: currentUser.name,
-      date: now.toISOString().split('T')[0], location_name: '', location_type: '',
-      latitude: lat, longitude: lng, start_time: now.toTimeString().slice(0,5),
-      end_time: '', bait: '', wind: '', sky: '', notes: '', status: 'draft',
-      created_at: now.toISOString()
-    };
+  if (!navigator.geolocation){alert('GPS not available');return;}
+  showMsg('📍 Getting location...','loading',0);
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const lat=pos.coords.latitude.toFixed(6),lng=pos.coords.longitude.toFixed(6);
+    const now=new Date();
+    const o={id:genId(),user_id:currentUser.id,user_name:fullName(currentUser),date:now.toISOString().split('T')[0],location_name:'',location_type:'',latitude:lat,longitude:lng,start_time:now.toTimeString().slice(0,5),end_time:'',bait:'',wind:'',sky:'',notes:'',status:'draft',created_at:now.toISOString()};
     try {
-      await sbInsert('FishingTrips', outing);
-      outings.unshift(outing);
-      catches[outing.id] = [];
-      showMsg('📍 Spot saved! ' + parseFloat(lat).toFixed(4) + ', ' + parseFloat(lng).toFixed(4), 'ok', 5000);
+      await sbInsert('FishingTrips',o);
+      outings.unshift(o); catches[o.id]=[]; photos[o.id]=[];
+      showMsg('📍 Spot saved! '+parseFloat(lat).toFixed(4)+', '+parseFloat(lng).toFixed(4),'ok',5000);
       render();
-    } catch(e) { showMsg('⚠️ Could not save spot', 'warn'); }
-  }, () => showMsg('⚠️ Could not get location — check location permissions', 'warn'),
-  { enableHighAccuracy: true, timeout: 10000 });
+    } catch(e){showMsg('⚠️ Could not save spot','warn');}
+  },()=>showMsg('⚠️ Could not get location','warn'),{enableHighAccuracy:true,timeout:10000});
 }
 
 // ── DETAIL ────────────────────────────────────────────────────
 function renderDetail() {
-  const t = selectedOuting;
-  const tc = catches[t.id] || [];
-  const total = tc.reduce((s,c) => s + (parseInt(c.count)||0), 0);
-  const isOwn = t.user_id === currentUser?.id && !currentUser?.readonly;
-  const chips = [['Type',t.location_type],['Wind',t.wind],['Sky',t.sky]].filter(([,v])=>v);
-  const hasGps = t.latitude && t.longitude;
-
+  const t=selectedOuting;
+  const tc=catches[t.id]||[];
+  const tp=photos[t.id]||[];
+  const total=tc.reduce((s,c)=>s+(parseInt(c.count)||0),0);
+  const isOwn=t.user_id===currentUser?.id&&!currentUser?.readonly;
+  const chips=[['Type',t.location_type],['Wind',t.wind],['Sky',t.sky]].filter(([,v])=>v);
+  const hasGps=t.latitude&&t.longitude;
   return `<button class="detail-back" onclick="setView('log')">← Back</button>
-    ${t.status==='draft' ? `<div class="draft-banner">
+    ${t.status==='draft'?`<div class="draft-banner">
       <div style="color:#f0c040;font-size:14px;font-weight:bold;margin-bottom:4px">📍 Saved Spot — Draft Outing</div>
-      <div style="color:#8a6a40;font-size:13px">GPS captured on ${fmtDate(t.date)} at ${t.start_time||''}. Complete the details when you're done fishing.</div>
+      <div style="color:#8a6a40;font-size:13px">GPS captured on ${fmtDate(t.date)}. Complete the details when done fishing.</div>
       ${isOwn?`<button class="btn btn-primary btn-full" style="margin-top:12px" onclick="completeDraft()">✏️ Complete This Outing</button>`:''}
-    </div>` : ''}
+    </div>`:''}
     <div style="color:#c8e6a0;font-size:24px;font-weight:bold;margin-bottom:4px">${t.location_name||t.location_type||'Unnamed Spot'}</div>
     <div style="color:#6a8a50;margin-bottom:18px">${fmtDate(t.date)}${t.start_time?' · '+t.start_time:''}${t.end_time?' – '+t.end_time:''}</div>
     <div class="detail-grid">
@@ -631,53 +613,81 @@ function renderDetail() {
       ${hasGps?`<div class="detail-chip"><div class="detail-chip-label">GPS</div><div class="detail-chip-val" style="font-size:11px;font-family:monospace">${parseFloat(t.latitude).toFixed(4)}, ${parseFloat(t.longitude).toFixed(4)}</div></div>`:''}
     </div>
     <div class="section"><div class="section-title">Catch · ${total} fish</div>
-      ${tc.length ? tc.map(c=>`<div class="catch-detail-row"><span style="color:#c8e6a0;font-size:15px">${c.person?c.person+': ':''}${c.species}</span><span style="color:#f0c040;font-size:20px;font-weight:bold">${c.count}</span></div>`).join('') : '<div style="color:#6a8a50">No catches recorded.</div>'}
+      ${tc.length?tc.map(c=>`<div class="catch-detail-row"><span style="color:#c8e6a0;font-size:15px">${c.person?c.person+': ':''}${c.species}</span><span style="color:#f0c040;font-size:20px;font-weight:bold">${c.count}</span></div>`).join(''):'<div style="color:#6a8a50">No catches recorded.</div>'}
     </div>
     ${t.bait?`<div class="section"><div class="section-title">Bait / Lures</div><div style="display:flex;flex-wrap:wrap;gap:6px">${t.bait.split(',').map(b=>`<span style="background:#3a5a1a;color:#c8e6a0;border-radius:20px;padding:5px 13px;font-size:13px">${b.trim()}</span>`).join('')}</div></div>`:''}
+    ${tp.length?`<div class="section"><div class="section-title">📷 Photos (${tp.length})</div>
+      <div class="photo-gallery">${tp.map(p=>`<img class="gallery-photo" src="${p.url}" onclick="openLightbox('${p.url}')" loading="lazy">`).join('')}</div>
+    </div>`:''}
     ${t.notes?`<div class="section"><div class="section-title">Notes</div><div style="color:#c8e6a0;line-height:1.7;font-size:14px">${t.notes}</div></div>`:''}
     ${hasGps?`<div class="section"><div class="section-title">Location</div><a href="https://maps.google.com/?q=${t.latitude},${t.longitude}" target="_blank" style="color:#6aaa30;font-size:14px">📍 View on Google Maps →</a></div>`:''}
+    ${isOwn?`<button class="btn btn-ghost btn-full" style="margin-top:8px" onclick="addPhotosToOuting('${t.id}')">📷 Add Photos</button>`:''}
     <div class="saved-badge">✅ Saved in Fish Log</div>`;
 }
 
 function completeDraft() {
-  const t = selectedOuting;
-  formData = {
-    id: t.id, isCompleting: true,
-    date: t.date, locationName: t.location_name || '', locationType: t.location_type || '',
-    latitude: t.latitude || '', longitude: t.longitude || '',
-    startTime: t.start_time || '', endTime: '',
-    companions: [], separateCounts: false,
-    catches: [], groupCatches: [], bait: [], wind: '', sky: '', notes: ''
-  };
-  formStep = 0;
+  const t=selectedOuting;
+  formData={id:t.id,isCompleting:true,date:t.date,locationName:t.location_name||'',locationType:t.location_type||'',latitude:t.latitude||'',longitude:t.longitude||'',startTime:t.start_time||'',endTime:'',companions:[],companionUserIds:[],separateCounts:false,catches:[],groupCatches:[],bait:[],wind:'',sky:'',notes:'',isCompleting:true,cSpecies:'',cCount:'',cPerson:'Group',customSpecies:''};
+  pendingPhotos=[];
+  formStep=0;
   setView('new');
 }
+
+// ── ADD PHOTOS TO EXISTING OUTING ─────────────────────────────
+async function addPhotosToOuting(outingId) {
+  const input=document.createElement('input');
+  input.type='file'; input.accept='image/*'; input.multiple=true;
+  input.onchange=async()=>{
+    const files=Array.from(input.files);
+    if (!files.length) return;
+    showMsg('📷 Uploading photos...','loading',0);
+    let count=0;
+    for (const file of files) {
+      try {
+        const url=await uploadPhoto(file,outingId);
+        const photoRow={id:genId(),trip_id:outingId,user_id:currentUser.id,url,caption:'',created_at:new Date().toISOString()};
+        await sbInsert('FishingPhotos',photoRow);
+        if (!photos[outingId]) photos[outingId]=[];
+        photos[outingId].push(photoRow);
+        count++;
+      } catch(e){console.error('Photo upload error',e);}
+    }
+    showMsg(`✅ ${count} photo${count!==1?'s':''} added!`,'ok');
+    // Re-render detail
+    const body=document.getElementById('appBody');
+    if (body && currentView==='detail') body.innerHTML=renderDetail();
+  };
+  input.click();
+}
+
+// ── LIGHTBOX ──────────────────────────────────────────────────
+function openLightbox(url) {
+  document.getElementById('lightboxImg').src=url;
+  document.getElementById('lightbox').style.display='flex';
+}
+function closeLightbox() { document.getElementById('lightbox').style.display='none'; }
 
 // ── FORM ──────────────────────────────────────────────────────
 function startNew() {
-  formData = {
-    date: new Date().toISOString().split('T')[0],
-    locationName: '', locationType: '', latitude: '', longitude: '',
-    startTime: '', endTime: '', companions: [], separateCounts: false,
-    catches: [], groupCatches: [], bait: [], wind: '', sky: '', notes: '',
-    isCompleting: false, cSpecies: '', cCount: '', cPerson: 'Group'
-  };
-  formStep = 0;
+  formData={date:new Date().toISOString().split('T')[0],locationName:'',locationType:'',latitude:'',longitude:'',startTime:'',endTime:'',companions:[],companionUserIds:[],separateCounts:false,catches:[],groupCatches:[],bait:[],wind:'',sky:'',notes:'',isCompleting:false,cSpecies:'',cCount:'',cPerson:'Group',customSpecies:''};
+  pendingPhotos=[];
+  formStep=0;
   setView('new');
 }
 
+const TOTAL_STEPS=5;
 function renderForm() {
-  const steps = [renderStep0, renderStep1, renderStep2, renderStep3];
-  const dots = [0,1,2,3].map(i=>`<div class="step-dot ${i===formStep?'active':i<formStep?'done':'pending'}"></div>`).join('');
+  const steps=[renderStep0,renderStep1,renderStep2,renderStep3,renderStep4];
+  const dots=[0,1,2,3,4].map(i=>`<div class="step-dot ${i===formStep?'active':i<formStep?'done':'pending'}"></div>`).join('');
   return `<div class="form-header">
     <button class="btn-cancel" onclick="setView('log')">✕ Cancel</button>
     <div class="step-dots">${dots}</div>
-    <span style="color:#6a8a50;font-size:13px">${formStep+1} / 4</span>
+    <span style="color:#6a8a50;font-size:13px">${formStep+1} / ${TOTAL_STEPS}</span>
   </div>
   ${steps[formStep]()}
   <div class="form-btns">
     ${formStep>0?`<button class="btn btn-secondary" style="flex:1" onclick="formStepChange(-1)">← Back</button>`:''}
-    ${formStep<3
+    ${formStep<TOTAL_STEPS-1
       ?`<button class="btn btn-primary" style="flex:2" onclick="formStepChange(1)">Next →</button>`
       :`<button class="btn btn-primary btn-full" id="btnSave" onclick="saveOuting()">✅ Save Outing</button>`}
   </div>`;
@@ -703,15 +713,26 @@ function renderStep0() {
 }
 
 function renderStep1() {
-  const persons = ['Group','Me',...formData.companions];
+  const otherUsers=users.filter(u=>u.id!==currentUser?.id);
   return `<div class="step-title">👥 Who Was With You?</div>
   <div class="step-sub">Leave blank if you fished alone.</div>
+  ${otherUsers.length?`<div style="margin-bottom:16px">
+    <div class="field-label">Select from existing anglers</div>
+    ${otherUsers.map(u=>`<div class="companion-item" style="cursor:pointer" onclick="toggleUserCompanion('${u.id}')">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:12px;height:12px;border-radius:50%;background:${u.color}"></div>
+        <span style="color:#c8e6a0;font-size:15px">${u.icon} ${fullName(u)}</span>
+      </div>
+      <div style="width:22px;height:22px;border-radius:11px;border:2px solid ${formData.companionUserIds.includes(u.id)?'#6aaa30':'#3a5a1a'};background:${formData.companionUserIds.includes(u.id)?'#6aaa30':'transparent'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">${formData.companionUserIds.includes(u.id)?'✓':''}</div>
+    </div>`).join('')}
+    <div style="color:#4a6a2a;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin:14px 0 10px">— or add someone not in the app —</div>
+  </div>`:''}
   <div class="companion-row">
-    <input class="companion-input" type="text" id="compInput" placeholder="Add a name (e.g. Keith)" onkeydown="if(event.key==='Enter')addComp()">
+    <input class="companion-input" type="text" id="compInput" placeholder="Type a name" onkeydown="if(event.key==='Enter')addComp()">
     <button class="btn btn-primary" style="padding:13px 18px" onclick="addComp()">Add</button>
   </div>
   <div>${formData.companions.map((c,i)=>`<div class="companion-item"><span style="color:#c8e6a0;font-size:15px">👤 ${c}</span><button style="background:none;border:none;color:#7a4a3a;cursor:pointer;font-size:20px" onclick="removeComp(${i})">✕</button></div>`).join('')}</div>
-  ${formData.companions.length?`<div class="sep-box">
+  ${(formData.companions.length>0||formData.companionUserIds.length>0)?`<div class="sep-box">
     <div style="color:#c8e6a0;font-size:15px;margin-bottom:14px">Track catches separately per person?</div>
     <div style="display:flex;gap:10px">
       <button class="btn ${formData.separateCounts?'btn-primary':'btn-ghost'}" style="flex:1" onclick="formData.separateCounts=true;rerender()">✅ Yes</button>
@@ -721,18 +742,20 @@ function renderStep1() {
 }
 
 function renderStep2() {
-  const canAdd = formData.cSpecies && formData.cCount && parseInt(formData.cCount)>0;
-  const all = [...formData.catches, ...formData.groupCatches];
-  const total = all.reduce((s,c)=>s+(c.count||0),0);
-  const persons = ['Group','Me',...formData.companions];
+  const canAdd=formData.cSpecies&&formData.cCount&&parseInt(formData.cCount)>0&&(formData.cSpecies!=='Other'||formData.customSpecies);
+  const all=[...formData.catches,...formData.groupCatches];
+  const total=all.reduce((s,c)=>s+(c.count||0),0);
+  const userCompanionNames=formData.companionUserIds.map(id=>{const u=userById(id);return u?fullName(u):'Unknown';});
+  const persons=['Group','Me',...userCompanionNames,...formData.companions];
   return `<div class="step-title">🐟 What Did You Catch?</div>
   <div class="step-sub">Pick a species, enter a count, then tap Add Catch.</div>
   <div class="chips-label">Species</div>
-  <div class="chips">${SPECIES.map(o=>`<button class="chip${formData.cSpecies===o?' active':''}" onclick="captureAndSet('cSpecies','${o}')">${o}</button>`).join('')}</div>
+  <div class="chips">${[...species,'Other'].map(o=>`<button class="chip${formData.cSpecies===o?' active':''}" onclick="captureAndSet('cSpecies','${o}')">${o}</button>`).join('')}</div>
+  ${formData.cSpecies==='Other'?`<div class="field" style="margin-top:-10px"><div class="field-label">What kind of fish?</div><input type="text" id="fCustomSpecies" value="${formData.customSpecies||''}" placeholder="e.g. White Bass, Gar..." oninput="formData.customSpecies=this.value;rerender()"></div>`:''}
   <div class="field"><div class="field-label">Count</div><input type="number" id="fCount" value="${formData.cCount||''}" placeholder="How many?" oninput="formData.cCount=this.value"></div>
   ${formData.separateCounts?`<div class="chips-label">Whose catch?</div><div class="chips">${persons.map(o=>`<button class="chip${(formData.cPerson||'Group')===o?' active':''}" onclick="captureAndSet('cPerson','${o}')">${o}</button>`).join('')}</div>`:''}
   <button class="btn ${canAdd?'btn-primary':'btn-ghost'} btn-full" style="margin-bottom:20px" onclick="addCatch()" ${canAdd?'':'disabled'}>
-    ${canAdd?`+ Add ${formData.cCount} ${formData.cSpecies}`:'+ Select species & count first'}
+    ${canAdd?`+ Add ${formData.cCount} ${formData.cSpecies==='Other'?formData.customSpecies||'Other':formData.cSpecies}`:'+ Select species & count first'}
   </button>
   ${all.length?`<div class="catch-log">
     <div class="catch-log-header"><span style="color:#6a8a50;font-size:12px;text-transform:uppercase">Catch Log</span><span style="color:#f0c040;font-size:16px;font-weight:bold">${total} total</span></div>
@@ -751,213 +774,252 @@ function renderStep3() {
   <div class="field"><div class="field-label">Notes</div><textarea id="fNotes" placeholder="Anything worth remembering...">${formData.notes}</textarea></div>`;
 }
 
+function renderStep4() {
+  return `<div class="step-title">📷 Add Photos</div>
+  <div class="step-sub">Optional — take a photo or choose from your camera roll.</div>
+  ${pendingPhotos.length>0?`<div class="photo-grid">
+    ${pendingPhotos.map((p,i)=>`<div class="photo-thumb">
+      <img src="${p.previewUrl}" alt="Photo ${i+1}">
+      <button class="photo-thumb-del" onclick="removePendingPhoto(${i})">✕</button>
+      ${p.uploading?'<div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px">Uploading...</div>':''}
+    </div>`).join('')}
+  </div>`:''}
+  <div class="photo-upload-area" onclick="triggerPhotoUpload()">
+    <div style="font-size:36px;margin-bottom:8px">📷</div>
+    <div style="color:#6aaa30;font-size:15px;font-weight:bold;margin-bottom:4px">Tap to add photos</div>
+    <div style="color:#6a8a50;font-size:13px">Take a photo or choose from your camera roll</div>
+  </div>
+  <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhotoSelect(event)">
+  ${pendingPhotos.length>0?`<div style="color:#8aaa60;font-size:13px;text-align:center">${pendingPhotos.length} photo${pendingPhotos.length!==1?'s':''} ready to upload when you save</div>`:''}
+  <div style="color:#6a8a50;font-size:12px;margin-top:14px;text-align:center">You can also add photos later by tapping "Add Photos" on any outing.</div>`;
+}
+
+function triggerPhotoUpload() { document.getElementById('photoInput')?.click(); }
+
+function handlePhotoSelect(e) {
+  const files=Array.from(e.target.files);
+  files.forEach(file=>{
+    const previewUrl=URL.createObjectURL(file);
+    pendingPhotos.push({file,previewUrl,uploading:false,url:null});
+  });
+  rerender();
+  e.target.value='';
+}
+
+function removePendingPhoto(i) { pendingPhotos.splice(i,1); rerender(); }
+
 function attachFormEvents() {}
 
 function captureFields() {
-  const f = (id) => document.getElementById(id);
-  if (f('fSpot')) formData.locationName = f('fSpot').value;
-  if (f('fLat')) formData.latitude = f('fLat').value;
-  if (f('fLng')) formData.longitude = f('fLng').value;
-  if (f('fCount')) formData.cCount = f('fCount').value;
-  if (f('fNotes')) formData.notes = f('fNotes').value;
-  if (f('fDate')) formData.date = f('fDate').value;
-  if (f('fStart')) formData.startTime = f('fStart').value;
-  if (f('fEnd')) formData.endTime = f('fEnd').value;
+  const g=id=>document.getElementById(id);
+  if(g('fSpot')) formData.locationName=g('fSpot').value;
+  if(g('fLat')) formData.latitude=g('fLat').value;
+  if(g('fLng')) formData.longitude=g('fLng').value;
+  if(g('fCount')) formData.cCount=g('fCount').value;
+  if(g('fNotes')) formData.notes=g('fNotes').value;
+  if(g('fDate')) formData.date=g('fDate').value;
+  if(g('fStart')) formData.startTime=g('fStart').value;
+  if(g('fEnd')) formData.endTime=g('fEnd').value;
+  if(g('fCustomSpecies')) formData.customSpecies=g('fCustomSpecies').value;
 }
 
-function captureAndSet(key, val) {
-  captureFields();
-  formData[key] = formData[key] === val ? '' : val;
-  rerender();
-}
-
-function toggleBait(b) {
-  captureFields();
-  formData.bait = formData.bait.includes(b) ? formData.bait.filter(x=>x!==b) : [...formData.bait, b];
-  rerender();
-}
-
-function rerender() {
-  const body = document.getElementById('appBody');
-  if (body) body.innerHTML = renderForm();
-}
-
-function formStepChange(dir) { captureFields(); formStep += dir; rerender(); }
-function addComp() { const el = document.getElementById('compInput'); const v = el?.value?.trim(); if (v) { formData.companions.push(v); if(el) el.value=''; rerender(); } }
+function captureAndSet(key,val) { captureFields(); formData[key]=formData[key]===val?'':val; rerender(); }
+function toggleBait(b) { captureFields(); formData.bait=formData.bait.includes(b)?formData.bait.filter(x=>x!==b):[...formData.bait,b]; rerender(); }
+function toggleUserCompanion(uid) { formData.companionUserIds=formData.companionUserIds.includes(uid)?formData.companionUserIds.filter(x=>x!==uid):[...formData.companionUserIds,uid]; rerender(); }
+function rerender() { const body=document.getElementById('appBody'); if(body) body.innerHTML=renderForm(); }
+function formStepChange(dir) { captureFields(); formStep+=dir; rerender(); }
+function addComp() { const el=document.getElementById('compInput'); const v=el?.value?.trim(); if(v){formData.companions.push(v);if(el)el.value='';rerender();} }
 function removeComp(i) { formData.companions.splice(i,1); rerender(); }
 
 function addCatch() {
   captureFields();
-  if (!formData.cSpecies || !formData.cCount || parseInt(formData.cCount)<=0) return;
-  const entry = { species: formData.cSpecies, count: parseInt(formData.cCount) };
-  const person = formData.cPerson || 'Group';
-  if (formData.separateCounts && person !== 'Group') { entry.person = person; formData.catches.push(entry); }
+  let sp=formData.cSpecies;
+  if (sp==='Other'&&formData.customSpecies) sp=formData.customSpecies;
+  if (!sp||!formData.cCount||parseInt(formData.cCount)<=0) return;
+  const entry={species:sp,count:parseInt(formData.cCount)};
+  const person=formData.cPerson||'Group';
+  if (formData.separateCounts&&person!=='Group'){entry.person=person;formData.catches.push(entry);}
   else formData.groupCatches.push(entry);
-  formData.cSpecies = ''; formData.cCount = '';
+  formData.cSpecies=''; formData.cCount=''; formData.customSpecies='';
   rerender();
 }
 
 function removeCatch(i) {
-  const all = [...formData.catches.map((c,j)=>({...c,_s:'catches',_i:j})), ...formData.groupCatches.map((c,j)=>({...c,_s:'groupCatches',_i:j}))];
-  const item = all[i];
-  if (item._s==='catches') formData.catches.splice(item._i,1);
+  const all=[...formData.catches.map((c,j)=>({...c,_s:'catches',_i:j})),...formData.groupCatches.map((c,j)=>({...c,_s:'groupCatches',_i:j}))];
+  const item=all[i];
+  if(item._s==='catches') formData.catches.splice(item._i,1);
   else formData.groupCatches.splice(item._i,1);
   rerender();
 }
 
 function captureGPS() {
-  if (!navigator.geolocation) { alert('GPS not available'); return; }
-  const st = document.getElementById('gpsStatus');
-  if (st) st.textContent = '⏳ Getting your location...';
-  navigator.geolocation.getCurrentPosition(pos => {
-    formData.latitude = pos.coords.latitude.toFixed(6);
-    formData.longitude = pos.coords.longitude.toFixed(6);
-    const latEl = document.getElementById('fLat');
-    const lngEl = document.getElementById('fLng');
-    if (latEl) latEl.value = formData.latitude;
-    if (lngEl) lngEl.value = formData.longitude;
-    if (st) st.textContent = '✅ GPS: ' + parseFloat(formData.latitude).toFixed(4) + ', ' + parseFloat(formData.longitude).toFixed(4);
-  }, () => { if (st) st.textContent = '⚠️ Could not get location'; }, { enableHighAccuracy: true, timeout: 10000 });
+  if (!navigator.geolocation){alert('GPS not available');return;}
+  const st=document.getElementById('gpsStatus');
+  if(st) st.textContent='⏳ Getting your location...';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    formData.latitude=pos.coords.latitude.toFixed(6);
+    formData.longitude=pos.coords.longitude.toFixed(6);
+    const latEl=document.getElementById('fLat'),lngEl=document.getElementById('fLng');
+    if(latEl) latEl.value=formData.latitude;
+    if(lngEl) lngEl.value=formData.longitude;
+    if(st) st.textContent='✅ GPS: '+parseFloat(formData.latitude).toFixed(4)+', '+parseFloat(formData.longitude).toFixed(4);
+  },()=>{if(st) st.textContent='⚠️ Could not get location';},{enableHighAccuracy:true,timeout:10000});
 }
 
 async function saveOuting() {
   captureFields();
-  const btn = document.getElementById('btnSave');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Saving...'; }
-  showMsg('Saving...', 'loading', 0);
+  const btn=document.getElementById('btnSave');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Saving...';}
+  showMsg('Saving...','loading',0);
 
-  const allCatches = [...formData.catches, ...formData.groupCatches];
-  const now = new Date().toISOString();
-  const outingId = formData.id || genId();
+  const allCatches=[...formData.catches,...formData.groupCatches];
+  const now=new Date().toISOString();
+  const outingId=formData.id||genId();
 
-  const outing = {
-    id: outingId, user_id: currentUser.id, user_name: currentUser.name,
-    date: formData.date, location_name: formData.locationName, location_type: formData.locationType,
-    latitude: formData.latitude, longitude: formData.longitude,
-    start_time: formData.startTime, end_time: formData.endTime,
-    bait: formData.bait.join(', '), wind: formData.wind, sky: formData.sky,
-    notes: formData.notes, status: 'complete', created_at: now
-  };
+  // Check for new custom species and save them
+  const newSpecies=allCatches.map(c=>c.species).filter(s=>!species.includes(s)&&s!=='Other');
+  for (const sp of newSpecies) {
+    try {
+      await sbInsert('FishingSpecies',{id:genId(),name:sp,added_by:currentUser.id,created_at:now});
+      species.push(sp);
+    } catch {}
+  }
+
+  const outing={id:outingId,user_id:currentUser.id,user_name:fullName(currentUser),date:formData.date,location_name:formData.locationName,location_type:formData.locationType,latitude:formData.latitude,longitude:formData.longitude,start_time:formData.startTime,end_time:formData.endTime,bait:formData.bait.join(', '),wind:formData.wind,sky:formData.sky,notes:formData.notes,status:'complete',created_at:now};
 
   try {
-    if (formData.isCompleting) {
-      await sbUpdate('FishingTrips', outingId, outing);
-      const idx = outings.findIndex(t => t.id === outingId);
-      if (idx >= 0) outings[idx] = { ...outings[idx], ...outing };
+    if(formData.isCompleting){
+      await sbUpdate('FishingTrips',outingId,outing);
+      const idx=outings.findIndex(t=>t.id===outingId);
+      if(idx>=0) outings[idx]={...outings[idx],...outing};
     } else {
-      await sbInsert('FishingTrips', outing);
+      await sbInsert('FishingTrips',outing);
       outings.unshift(outing);
     }
-    catches[outingId] = catches[outingId] || [];
+
+    // Save catches
+    catches[outingId]=catches[outingId]||[];
     for (const c of allCatches) {
-      const row = { id: genId(), trip_id: outingId, user_id: currentUser.id, species: c.species, count: c.count, person: c.person || '', created_at: now };
-      await sbInsert('FishingCatches', row);
+      const row={id:genId(),trip_id:outingId,user_id:currentUser.id,species:c.species,count:c.count,person:c.person||'',created_at:now};
+      await sbInsert('FishingCatches',row);
       catches[outingId].push(row);
     }
-    showMsg('✅ Outing saved!', 'ok');
+
+    // Share with companion users
+    for (const uid of formData.companionUserIds) {
+      try {
+        await sbInsert('FishingSharedOutings',{id:genId(),trip_id:outingId,user_id:uid,created_at:now});
+      } catch {}
+    }
+
+    // Upload photos
+    photos[outingId]=photos[outingId]||[];
+    if (pendingPhotos.length>0) {
+      showMsg(`📷 Uploading ${pendingPhotos.length} photo${pendingPhotos.length!==1?'s':''}...`,'loading',0);
+      for (const p of pendingPhotos) {
+        try {
+          const url=await uploadPhoto(p.file,outingId);
+          const photoRow={id:genId(),trip_id:outingId,user_id:currentUser.id,url,caption:'',created_at:now};
+          await sbInsert('FishingPhotos',photoRow);
+          photos[outingId].push(photoRow);
+        } catch(e){console.error('Photo upload error',e);}
+      }
+    }
+
+    showMsg('✅ Outing saved!','ok');
     setView('log');
   } catch(e) {
-    showMsg('⚠️ Save failed: ' + e.message, 'warn');
-    if (btn) { btn.disabled = false; btn.textContent = '✅ Save Outing'; }
+    showMsg('⚠️ Save failed: '+e.message,'warn');
+    if(btn){btn.disabled=false;btn.textContent='✅ Save Outing';}
   }
 }
 
 // ── STATS ─────────────────────────────────────────────────────
 function renderStats() {
-  const complete = outings.filter(t => t.status !== 'draft');
-  if (!complete.length) return `<div class="empty"><div class="empty-icon">📊</div><div class="empty-title">No data yet</div><div class="empty-sub">Log some outings to see stats!</div></div>`;
-
-  const bySpecies = {}, bySpot = {}, byUser = {};
-  let totalFish = 0;
-
-  complete.forEach(t => {
-    (catches[t.id]||[]).forEach(c => {
-      const n = parseInt(c.count)||0;
-      bySpecies[c.species] = (bySpecies[c.species]||0) + n;
-      totalFish += n;
-    });
-    const loc = t.location_name || t.location_type || 'Unknown';
-    bySpot[loc] = (bySpot[loc]||0) + outingTotal(t.id);
-    byUser[t.user_id] = (byUser[t.user_id]||0) + outingTotal(t.id);
+  const complete=outings.filter(t=>t.status!=='draft');
+  if(!complete.length) return `<div class="empty"><div class="empty-icon">📊</div><div class="empty-title">No data yet</div><div class="empty-sub">Log some outings to see stats!</div></div>`;
+  const bySpecies={},bySpot={},byUser={};
+  let totalFish=0;
+  complete.forEach(t=>{
+    (catches[t.id]||[]).forEach(c=>{const n=parseInt(c.count)||0;bySpecies[c.species]=(bySpecies[c.species]||0)+n;totalFish+=n;});
+    const loc=t.location_name||t.location_type||'Unknown';
+    bySpot[loc]=(bySpot[loc]||0)+outingTotal(t.id);
+    byUser[t.user_id]=(byUser[t.user_id]||0)+outingTotal(t.id);
   });
-
-  const topSpecies = Object.entries(bySpecies).sort((a,b)=>b[1]-a[1]);
-  const topSpots = Object.entries(bySpot).sort((a,b)=>b[1]-a[1]);
-  const lb = Object.entries(byUser).sort((a,b)=>b[1]-a[1]);
-
+  const topSp=Object.entries(bySpecies).sort((a,b)=>b[1]-a[1]);
+  const topSt=Object.entries(bySpot).sort((a,b)=>b[1]-a[1]);
+  const lb=Object.entries(byUser).sort((a,b)=>b[1]-a[1]);
   return `
     <div class="stats-grid">
-      ${[{l:'Outings',v:complete.length},{l:'Total Fish',v:totalFish},{l:'Top Species',v:topSpecies[0]?.[0]?.split('/')[0]||'—'},{l:'Top Spot',v:topSpots[0]?.[0]||'—'}].map(({l,v})=>`<div class="stat-card"><div class="stat-val">${v}</div><div class="stat-label">${l}</div></div>`).join('')}
+      ${[{l:'Outings',v:complete.length},{l:'Total Fish',v:totalFish},{l:'Top Species',v:topSp[0]?.[0]?.split('/')[0]||'—'},{l:'Top Spot',v:topSt[0]?.[0]||'—'}].map(({l,v})=>`<div class="stat-card"><div class="stat-val">${v}</div><div class="stat-label">${l}</div></div>`).join('')}
     </div>
-    ${lb.length>0?`<div class="section"><div class="section-title">🏆 Leaderboard — All Anglers</div>
+    ${lb.length?`<div class="section"><div class="section-title">🏆 Leaderboard — All Anglers</div>
       ${lb.map(([uid,fish],i)=>`<div class="leaderboard-row">
-        <div class="lb-left"><span style="color:#f0c040;font-size:18px;width:28px">${['🥇','🥈','🥉'][i]||''}</span><div class="lb-dot" style="background:${userColor(uid)}"></div><span style="color:#c8e6a0;font-size:15px;font-weight:bold">${userName(uid)}</span></div>
+        <div class="lb-left"><span style="color:#f0c040;font-size:18px;width:28px">${['🥇','🥈','🥉'][i]||''}</span><div class="lb-dot" style="background:${userColor(uid)}"></div><span style="color:#c8e6a0;font-size:15px;font-weight:bold">${userDisplayName(uid)}</span></div>
         <div style="text-align:right"><div style="color:#f0c040;font-size:20px;font-weight:bold">${fish}</div><div style="color:#6a8a50;font-size:11px">fish</div></div>
       </div>`).join('')}
     </div>`:''}
-    ${topSpecies.length?`<div class="section"><div class="section-title">By Species</div>
-      ${topSpecies.map(([sp,ct])=>`<div class="bar-row">
+    ${topSp.length?`<div class="section"><div class="section-title">By Species</div>
+      ${topSp.map(([sp,ct])=>`<div class="bar-row">
         <div class="bar-label-row"><span style="color:#c8e6a0;font-size:14px">${sp}</span><span style="color:#f0c040;font-weight:bold">${ct}</span></div>
         <div class="bar-bg"><div class="bar-fill" style="width:${Math.round(ct/totalFish*100)}%"></div></div>
       </div>`).join('')}
     </div>`:''}
-    ${topSpots.length?`<div class="section"><div class="section-title">Top Spots</div>
-      ${topSpots.slice(0,6).map(([sp,ct])=>`<div class="spot-list-row"><span style="color:#c8e6a0;font-size:13px">📍 ${sp}</span><span style="color:#f0c040;font-weight:bold">${ct} fish</span></div>`).join('')}
+    ${topSt.length?`<div class="section"><div class="section-title">Top Spots</div>
+      ${topSt.slice(0,6).map(([sp,ct])=>`<div class="spot-list-row"><span style="color:#c8e6a0;font-size:13px">📍 ${sp}</span><span style="color:#f0c040;font-weight:bold">${ct} fish</span></div>`).join('')}
     </div>`:''}`;
 }
 
 // ── FAQ ───────────────────────────────────────────────────────
-const FAQ_ITEMS = [
-  { q: 'How do I log a new outing?', a: 'Tap the green "+ Outing" button in the top right. You\'ll be walked through 4 steps: Where & When, Who Was With You, What Did You Catch, and Conditions. Tap "Save Outing" when done.' },
-  { q: 'How do I save my GPS location quickly while fishing?', a: 'Tap the orange "📍 Spot" button. The app will instantly capture your exact location and save it as a draft outing. You can come back later to add the catch details.' },
-  { q: 'What is a draft outing?', a: 'A draft is a saved GPS spot that hasn\'t been completed yet. It shows with a dashed border. Tap it to open it and add your catch totals and other details when you\'re done fishing.' },
-  { q: 'How do I see everyone\'s catches?', a: 'Tap the "All Anglers" toggle at the top of the Outings screen to see everyone\'s logged outings. The Stats tab always shows everyone\'s totals and the leaderboard.' },
-  { q: 'I got a new phone — how do I get my account back?', a: 'Open the app on your new phone, tap your name from the list, and enter your 4-digit secret code. Your account and all your history will come right back.' },
-  { q: 'I forgot my secret code — what do I do?', a: 'Contact Ed and he can look it up or reset it for you.' },
-  { q: 'How do I add the app to my home screen on iPhone?', a: '1. Open the app in Safari\n2. Tap the Share button (box with arrow ↑) at the bottom\n3. Scroll down and tap "Add to Home Screen"\n4. Tap "Add"\nThe Fish Log icon will appear on your home screen.' },
-  { q: 'How do I add the app to my home screen on Android?', a: '1. Open the app in Chrome\n2. Tap the three-dot menu ⋮ in the top right\n3. Tap "Add to Home Screen"\n4. Tap "Add"\nThe Fish Log icon will appear on your home screen.' },
-  { q: 'Can I delete an outing I logged by mistake?', a: 'Yes — tap the outing to open it, or tap the ✕ button on the outing card. You\'ll be asked to confirm before it\'s permanently deleted.' },
-  { q: 'How do I log catches for multiple people separately?', a: 'When adding an outing, go to Step 2 (Who Was With You) and add your companions\' names. Then toggle "Yes" for separate counts. On Step 3 you can assign each catch to a specific person.' },
-  { q: 'Does the app work without internet?', a: 'Unfortunately no — the app needs an internet connection to save your outings. If you\'re somewhere without signal, use the 📍 Spot button to save your GPS location, then it will save when you have a connection.' },
-  { q: 'How do I see where I fished on a map?', a: 'If GPS was captured for an outing, tap the outing to open it and you\'ll see a "View on Google Maps" link that shows your exact fishing spot.' },
+const FAQ_ITEMS=[
+  {q:'How do I log a new outing?',a:'Tap the green "+ Outing" button in the top right. You\'ll be walked through 5 steps: Where & When, Who Was With You, What Did You Catch, Conditions, and Photos. Tap "Save Outing" when done.'},
+  {q:'How do I save my GPS location quickly while fishing?',a:'Tap the orange "📍 Spot" button. The app instantly captures your exact location as a draft outing. Come back later to add catch details.'},
+  {q:'How do I add photos to an outing?',a:'You can add photos during Step 5 when logging an outing, or tap "Add Photos" at the bottom of any completed outing. You can take a new photo or choose from your camera roll.'},
+  {q:'How do I log a shared outing with another angler?',a:'In Step 2 (Who Was With You), you\'ll see a list of existing anglers. Tap to select them and the outing will automatically appear in their list too, including all photos and catches.'},
+  {q:'I caught a fish not in the list — how do I add it?',a:'Tap "Other" in the species list and a text box will appear. Type the fish name and it will be saved as that species. Next time you open the app, that fish will appear in the species list for everyone.'},
+  {q:'What is a draft outing?',a:'A draft is a saved GPS spot that hasn\'t been completed yet. It shows with a dashed border. Tap it to add your catch totals and details when you\'re done fishing.'},
+  {q:'How do I see everyone\'s catches?',a:'Tap "All Anglers" at the top of the Outings screen. The Stats tab always shows everyone\'s totals and the full leaderboard.'},
+  {q:'I got a new phone — how do I get my account back?',a:'Open the app on your new phone, tap your name from the list, and enter your 4-digit secret code. All your history will come right back.'},
+  {q:'I forgot my secret code — what do I do?',a:'Contact Ed and he can look it up or reset it for you.'},
+  {q:'How do I add the app to my home screen on iPhone?',a:'1. Open the app in Safari\n2. Tap the Share button (box with arrow ↑) at the bottom\n3. Scroll down and tap "Add to Home Screen"\n4. Tap "Add"\nThe Fish Log icon will appear on your home screen.'},
+  {q:'How do I add the app to my home screen on Android?',a:'1. Open the app in Chrome\n2. Tap the three-dot menu ⋮ in the top right\n3. Tap "Add to Home Screen"\n4. Tap "Add"\nThe Fish Log icon will appear on your home screen.'},
+  {q:'Can I delete an outing?',a:'Yes — tap the ✕ button on the outing card. You\'ll be asked to confirm. This permanently deletes the outing and all its catches and photos.'},
 ];
 
 function renderFAQ() {
   return `<div>
     <div style="color:#c8e6a0;font-size:20px;font-weight:bold;margin-bottom:6px">❓ Help & FAQ</div>
     <div style="color:#6a8a50;font-size:13px;margin-bottom:20px">Tap a question to see the answer.</div>
-    ${FAQ_ITEMS.map((item, i) => `
-      <div class="faq-item">
-        <div class="faq-question" onclick="toggleFAQ(${i})">
-          <span class="faq-q-text">${item.q}</span>
-          <span class="faq-arrow ${faqOpen[i]?'open':''}" id="faq-arrow-${i}">▼</span>
-        </div>
-        <div class="faq-answer ${faqOpen[i]?'open':''}" id="faq-ans-${i}" style="white-space:pre-line">${item.a}</div>
-      </div>`).join('')}
+    ${FAQ_ITEMS.map((item,i)=>`<div class="faq-item">
+      <div class="faq-question" onclick="toggleFAQ(${i})">
+        <span class="faq-q-text">${item.q}</span>
+        <span class="faq-arrow ${faqOpen[i]?'open':''}" id="faq-arrow-${i}">▼</span>
+      </div>
+      <div class="faq-answer ${faqOpen[i]?'open':''}" id="faq-ans-${i}">${item.a}</div>
+    </div>`).join('')}
   </div>`;
 }
 
 function toggleFAQ(i) {
-  faqOpen[i] = !faqOpen[i];
-  const ans = document.getElementById('faq-ans-' + i);
-  const arrow = document.getElementById('faq-arrow-' + i);
-  if (ans) ans.classList.toggle('open', faqOpen[i]);
-  if (arrow) arrow.classList.toggle('open', faqOpen[i]);
+  faqOpen[i]=!faqOpen[i];
+  const ans=document.getElementById('faq-ans-'+i);
+  const arrow=document.getElementById('faq-arrow-'+i);
+  if(ans) ans.classList.toggle('open',faqOpen[i]);
+  if(arrow) arrow.classList.toggle('open',faqOpen[i]);
 }
 
 // ── ROUTING ───────────────────────────────────────────────────
-function setView(v) { currentView = v; render(); }
+function setView(v) { currentView=v; render(); }
 
 // ── INIT ──────────────────────────────────────────────────────
 async function init() {
-  document.getElementById('app').innerHTML = '<div class="loading">⏳ Loading Fish Log...</div>';
-  try {
-    await loadData();
-  } catch(e) {
-    document.getElementById('app').innerHTML = `<div class="loading" style="color:#e07070">⚠️ Connection error<br><small>${e.message}</small><br><br><button onclick="init()" style="background:#4a7a20;border:none;color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer">Retry</button></div>`;
+  document.getElementById('app').innerHTML='<div class="loading">⏳ Loading Fish Log...</div>';
+  try { await loadData(); }
+  catch(e) {
+    document.getElementById('app').innerHTML=`<div class="loading" style="color:#e07070">⚠️ Connection error<br><small>${e.message}</small><br><br><button onclick="init()" style="background:#4a7a20;border:none;color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer">Retry</button></div>`;
     return;
   }
-  if (!currentUser) setView('auth');
+  if(!currentUser) setView('auth');
   else setView('log');
 }
 
