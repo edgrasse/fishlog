@@ -195,7 +195,7 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 </div>
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-const VERSION = 'v2.1 · 2026-05-01';
+const VERSION = 'v2.2 · 2026-05-01';
 const WORKER_URL = 'https://grasse-apps-proxy.ed-53c.workers.dev';
 const APP_ID = 'fishinglog';
 const SUPABASE_URL = 'https://viprflxaudxjwsvytrnn.supabase.co';
@@ -251,22 +251,50 @@ async function sbUpdate(table, id, row) { return workerCall({ method: 'UPDATE', 
 
 // ── SUPABASE STORAGE (photos) ─────────────────────────────────
 async function uploadPhoto(file, outingId) {
-  const ext = file.name.split('.').pop() || 'jpg';
-  const path = `${outingId}/${genId()}.${ext}`;
+  const ext = (file.name || 'photo').split('.').pop().toLowerCase() || 'jpg';
+  const safeExt = ['jpg','jpeg','png','gif','webp','heic'].includes(ext) ? ext : 'jpg';
+  const path = `${outingId}/${genId()}.${safeExt}`;
+  const contentType = file.type || 'image/jpeg';
+
+  // Resize image before upload to keep file sizes reasonable
+  const resized = await resizeImage(file, 1200);
+
   const r = await fetch(`${SUPABASE_URL}/storage/v1/object/${STORAGE_BUCKET}/${path}`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      'Content-Type': file.type || 'image/jpeg',
+      'Content-Type': contentType,
+      'apikey': SUPABASE_ANON_KEY,
       'x-upsert': 'true'
     },
-    body: file
+    body: resized
   });
+
   if (!r.ok) {
-    const err = await r.text();
-    throw new Error('Upload failed: ' + err);
+    const errText = await r.text();
+    console.error('Upload error:', r.status, errText);
+    throw new Error(`Upload failed (${r.status}): ${errText}`);
   }
+
   return `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${path}`;
+}
+
+async function resizeImage(file, maxWidth) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(blob => resolve(blob || file), 'image/jpeg', 0.85);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
 }
 
 // ── HELPERS ───────────────────────────────────────────────────
@@ -345,6 +373,7 @@ function render() {
       <div class="user-badge">
         <div class="user-dot" style="background:${currentUser.color}"></div>
         <span class="user-name-label">${currentUser.icon} ${fullName(currentUser)}</span>
+        <button class="switch-user" onclick="setView('editprofile')" style="margin-right:6px">✏️ Profile</button>
         <button class="switch-user" onclick="switchUser()">Switch</button>
       </div>
       ${['log','stats','faq'].includes(currentView) ? `<div class="tabs">
@@ -361,6 +390,7 @@ function render() {
   else if (currentView === 'detail' && selectedOuting) body.innerHTML = renderDetail();
   else if (currentView === 'stats') body.innerHTML = renderStats();
   else if (currentView === 'faq') body.innerHTML = renderFAQ();
+  else if (currentView === 'editprofile') body.innerHTML = renderEditProfile();
   if (currentView === 'new') attachFormEvents();
 }
 
@@ -931,6 +961,86 @@ async function saveOuting() {
   } catch(e) {
     showMsg('⚠️ Save failed: '+e.message,'warn');
     if(btn){btn.disabled=false;btn.textContent='✅ Save Outing';}
+  }
+}
+
+// ── EDIT PROFILE ──────────────────────────────────────────────
+function renderEditProfile() {
+  const u = currentUser;
+  return `<div style="padding:0 0 40px">
+    <button class="detail-back" onclick="setView('log')">← Back</button>
+    <div style="color:#c8e6a0;font-size:22px;font-weight:bold;margin-bottom:4px">✏️ Edit Profile</div>
+    <div style="color:#6a8a50;font-size:13px;margin-bottom:24px">Update your details below.</div>
+
+    <div class="field-row">
+      <div class="field"><div class="field-label">First Name</div><input type="text" id="epFirst" value="${u.name||''}" placeholder="Ed"></div>
+      <div class="field"><div class="field-label">Last Name</div><input type="text" id="epLast" value="${u.last_name||''}" placeholder="Smith"></div>
+    </div>
+
+    <div class="chips-label">Color</div>
+    <div class="color-options">${COLORS.map(c=>`<div class="color-opt ${(currentUser._editColor||u.color)===c?'selected':''}" style="background:${c}" onclick="currentUser._editColor='${c}';renderProfileInPlace()"></div>`).join('')}</div>
+
+    <div class="chips-label">Icon</div>
+    <div class="icon-options">${ICONS.map(ic=>`<div class="icon-opt ${(currentUser._editIcon||u.icon)===ic?'selected':''}" onclick="currentUser._editIcon='${ic}';renderProfileInPlace()">${ic}</div>`).join('')}</div>
+
+    <div style="background:#1a2a1a;border:1px solid #3a5a1a;border-radius:10px;padding:16px;margin-bottom:18px">
+      <div style="color:#c8e6a0;font-size:15px;font-weight:bold;margin-bottom:12px">Change Secret Code</div>
+      <div class="field" style="margin-bottom:10px"><div class="field-label">Current Code</div><input type="number" id="epOldPin" placeholder="Current 4-digit code" style="letter-spacing:6px"></div>
+      <div class="field" style="margin-bottom:0"><div class="field-label">New Code (leave blank to keep current)</div><input type="number" id="epNewPin" placeholder="New 4-digit code" style="letter-spacing:6px"></div>
+    </div>
+
+    <div id="profileMsg" style="color:#e07070;font-size:13px;min-height:20px;margin-bottom:12px"></div>
+
+    <button class="btn btn-primary btn-full" onclick="saveProfile()" style="margin-bottom:12px">Save Changes</button>
+    <button class="btn btn-secondary btn-full" onclick="setView('log')">Cancel</button>
+  </div>`;
+}
+
+function renderProfileInPlace() {
+  const body = document.getElementById('appBody');
+  if (body) body.innerHTML = renderEditProfile();
+}
+
+async function saveProfile() {
+  const first = document.getElementById('epFirst')?.value?.trim();
+  const last = document.getElementById('epLast')?.value?.trim() || '';
+  const oldPin = document.getElementById('epOldPin')?.value?.trim();
+  const newPin = document.getElementById('epNewPin')?.value?.trim();
+  const msg = document.getElementById('profileMsg');
+
+  if (!first) { if(msg) msg.textContent = '❌ First name is required'; return; }
+
+  let newPinHash = currentUser.pin_hash;
+
+  // Handle PIN change
+  if (newPin) {
+    if (!oldPin) { if(msg) msg.textContent = '❌ Enter your current secret code to change it'; return; }
+    if (hashPin(oldPin) !== currentUser.pin_hash) { if(msg) msg.textContent = '❌ Current secret code is wrong'; return; }
+    if (newPin.length !== 4 || isNaN(newPin)) { if(msg) msg.textContent = '❌ New code must be exactly 4 digits'; return; }
+    newPinHash = hashPin(newPin);
+  }
+
+  const color = currentUser._editColor || currentUser.color;
+  const icon = currentUser._editIcon || currentUser.icon;
+
+  try {
+    const updates = { name: first, last_name: last, color, icon, pin_hash: newPinHash };
+    await sbUpdate('FishingUsers', currentUser.id, updates);
+
+    // Update local state
+    Object.assign(currentUser, updates);
+    delete currentUser._editColor;
+    delete currentUser._editIcon;
+    try { localStorage.setItem('fishlog-user', JSON.stringify(currentUser)); } catch {}
+
+    // Update users array
+    const idx = users.findIndex(u => u.id === currentUser.id);
+    if (idx >= 0) users[idx] = { ...users[idx], ...updates };
+
+    showMsg('✅ Profile updated!', 'ok');
+    setView('log');
+  } catch(e) {
+    if(msg) msg.textContent = '❌ Save failed: ' + e.message;
   }
 }
 
