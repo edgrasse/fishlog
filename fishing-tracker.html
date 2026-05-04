@@ -13,7 +13,7 @@
 <title>🎣 Fish Log</title>
 <script>
 // Force reload if a newer version is available
-const CACHE_VERSION = 'fishlog-v2.3-20260501';
+const CACHE_VERSION = 'fishlog-v2.5-20260501';
 const stored = localStorage.getItem('fishlog-cache-version');
 if (stored && stored !== CACHE_VERSION) {
   localStorage.setItem('fishlog-cache-version', CACHE_VERSION);
@@ -210,7 +210,7 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 </div>
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-const VERSION = 'v2.4 · 2026-05-01';
+const VERSION = 'v2.5 · 2026-05-01';
 const WORKER_URL = 'https://grasse-apps-proxy.ed-53c.workers.dev';
 const APP_ID = 'fishinglog';
 const SUPABASE_URL = 'https://viprflxaudxjwsvytrnn.supabase.co';
@@ -582,6 +582,8 @@ function renderCard(t) {
   const tp=photos[t.id]||[];
   const sp=[...new Set(tc.map(c=>c.species))];
   const isOwn=t.user_id===currentUser?.id&&!currentUser?.readonly;
+  // Build companion list from catch persons (exclude 'Me' and empty)
+  const companions=[...new Set(tc.map(c=>c.person).filter(p=>p&&p!=='Me'&&p!==''))];
   return `<div class="outing-card ${t.status==='draft'?'draft':''}" onclick="openOuting('${t.id}')">
     ${isOwn?`<button class="outing-del" onclick="event.stopPropagation();deleteOuting('${t.id}')">✕</button>`:''}
     <div class="outing-name">${t.location_name||t.location_type||(t.status==='draft'?'📍 Saved Spot':'Unnamed Spot')}</div>
@@ -591,6 +593,7 @@ function renderCard(t) {
       ${sp.map(s=>`<span class="tag">${s}</span>`).join('')}
       ${t._shared?'<span class="tag" style="background:#2a3a5a">shared</span>':''}
     </div>
+    ${companions.length?`<div style="margin-top:8px;display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span style="color:#4a6a2a;font-size:11px">👥</span>${companions.map(c=>`<span style="color:#8aaa60;font-size:12px">${c}</span>`).join('<span style="color:#3a5a1a;font-size:11px"> · </span>')}</div>`:''}
     ${tp.length?`<div class="card-photos">${tp.slice(0,4).map(p=>`<img class="card-photo" src="${p.url}" onclick="event.stopPropagation();openLightbox('${p.url}')" loading="lazy">`).join('')}</div>`:''}
     <div class="outing-footer">
       <div class="outing-angler">
