@@ -13,7 +13,7 @@
 <title>🎣 Fish Log</title>
 <script>
 // Force reload if a newer version is available
-const CACHE_VERSION = 'fishlog-v2.5-20260501';
+const CACHE_VERSION = 'fishlog-v2.5-20260507';
 const stored = localStorage.getItem('fishlog-cache-version');
 if (stored && stored !== CACHE_VERSION) {
   localStorage.setItem('fishlog-cache-version', CACHE_VERSION);
@@ -210,7 +210,7 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 </div>
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-const VERSION = 'v2.5 · 2026-05-01';
+const VERSION = 'v2.5 · 2026-05-07';
 const WORKER_URL = 'https://grasse-apps-proxy.ed-53c.workers.dev';
 const APP_ID = 'fishinglog';
 const SUPABASE_URL = 'https://viprflxaudxjwsvytrnn.supabase.co';
@@ -352,8 +352,15 @@ async function loadData() {
       (photoRes.data || []).forEach(p => { if (!photos[p.trip_id]) photos[p.trip_id] = []; photos[p.trip_id].push(p); });
 
       // Add shared outings to visible set
-      const sharedTripIds = new Set((sharedRes.data || []).filter(s => s.user_id === currentUser?.id).map(s => s.trip_id));
+      const sharedData = sharedRes.data || [];
+      // Mark outings shared TO current user
+      const sharedTripIds = new Set(sharedData.filter(s => s.user_id === currentUser?.id).map(s => s.trip_id));
       outings.forEach(o => { if (sharedTripIds.has(o.id)) o._shared = true; });
+      // Store which users each outing was shared WITH (for companion display)
+      outings.forEach(o => {
+        const sharedWith = sharedData.filter(s => s.trip_id === o.id).map(s => s.user_id);
+        if (sharedWith.length) o._sharedWith = sharedWith;
+      });
     }
   } catch(e) { console.error('Load error', e); }
 }
@@ -582,8 +589,22 @@ function renderCard(t) {
   const tp=photos[t.id]||[];
   const sp=[...new Set(tc.map(c=>c.species))];
   const isOwn=t.user_id===currentUser?.id&&!currentUser?.readonly;
-  // Build companion list from catch persons (exclude 'Me' and empty)
-  const companions=[...new Set(tc.map(c=>c.person).filter(p=>p&&p!=='Me'&&p!==''))];
+
+  // Build companion list from two sources:
+  // 1. Named persons in catches (e.g. "Keith" logged separately)
+  const catchPersons=tc.map(c=>c.person).filter(p=>p&&p!=='Me'&&p!=='');
+  // 2. Shared users — find who this outing was shared with via FishingSharedOutings
+  // We stored shared outings on load; cross-reference users list by checking
+  // which other users have this trip in their shared set
+  const sharedUserNames=users
+    .filter(u=>u.id!==t.user_id)
+    .filter(u=>{
+      // Check if this outing appears as shared for this user
+      return outings.find(o=>o.id===t.id&&o._sharedWith&&o._sharedWith.includes(u.id));
+    })
+    .map(u=>fullName(u));
+  const companions=[...new Set([...catchPersons,...sharedUserNames])];
+
   return `<div class="outing-card ${t.status==='draft'?'draft':''}" onclick="openOuting('${t.id}')">
     ${isOwn?`<button class="outing-del" onclick="event.stopPropagation();deleteOuting('${t.id}')">✕</button>`:''}
     <div class="outing-name">${t.location_name||t.location_type||(t.status==='draft'?'📍 Saved Spot':'Unnamed Spot')}</div>
