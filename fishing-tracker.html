@@ -13,7 +13,7 @@
 <title>🎣 Fish Log</title>
 <script>
 // Force reload if a newer version is available
-const CACHE_VERSION = 'fishlog-v2.5-20260507';
+const CACHE_VERSION = 'fishlog-v2.6-20260507';
 const stored = localStorage.getItem('fishlog-cache-version');
 if (stored && stored !== CACHE_VERSION) {
   localStorage.setItem('fishlog-cache-version', CACHE_VERSION);
@@ -210,7 +210,7 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 </div>
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-const VERSION = 'v2.5 · 2026-05-07';
+const VERSION = 'v2.6 · 2026-05-07';
 const WORKER_URL = 'https://grasse-apps-proxy.ed-53c.workers.dev';
 const APP_ID = 'fishinglog';
 const SUPABASE_URL = 'https://viprflxaudxjwsvytrnn.supabase.co';
@@ -468,12 +468,12 @@ function renderRegister() {
       <div class="field"><div class="field-label">Last Name</div><input type="text" id="regLast" placeholder="Smith" value="${registerData.last_name||''}" autocomplete="off"></div>
     </div>
     <div class="chips-label">Pick your color</div>
-    <div class="color-options">${COLORS.map(c=>`<div class="color-opt ${registerData.color===c?'selected':''}" style="background:${c}" onclick="registerData.color='${c}';render()"></div>`).join('')}</div>
+    <div class="color-options">${COLORS.map(c=>`<div class="color-opt ${registerData.color===c?'selected':''}" style="background:${c}" onclick="captureRegisterFields();registerData.color='${c}';render()"></div>`).join('')}</div>
     <div class="chips-label">Pick your icon</div>
-    <div class="icon-options">${ICONS.map(ic=>`<div class="icon-opt ${registerData.icon===ic?'selected':''}" onclick="registerData.icon='${ic}';render()">${ic}</div>`).join('')}</div>
+    <div class="icon-options">${ICONS.map(ic=>`<div class="icon-opt ${registerData.icon===ic?'selected':''}" onclick="captureRegisterFields();registerData.icon='${ic}';render()">${ic}</div>`).join('')}</div>
     <div class="field">
       <div class="field-label">Choose a 4-digit secret code</div>
-      <input type="number" id="regPin" placeholder="4 digits you will remember" style="letter-spacing:8px;font-size:20px">
+      <input type="number" id="regPin" placeholder="4 digits you will remember" value="${registerData.pin||''}" style="letter-spacing:8px;font-size:20px">
       <div style="color:#6a8a50;font-size:12px;margin-top:6px">You will need this to log outings. If you forget it, just ask Ed.</div>
     </div>
     <button class="btn btn-primary btn-full" onclick="createUser()" style="margin-bottom:12px">Create My Profile →</button>
@@ -541,11 +541,20 @@ async function verifyPin() {
 }
 function switchUser() { currentUser=null; try{localStorage.removeItem('fishlog-user');}catch{} setView('auth'); }
 function viewOnly() { currentUser={id:'readonly',name:'Viewer',last_name:'',color:'#6a8a50',icon:'👁',pin_hash:'',readonly:true}; setView('log'); }
+function captureRegisterFields() {
+  const first = document.getElementById('regFirst');
+  const last = document.getElementById('regLast');
+  const pin = document.getElementById('regPin');
+  if (first) registerData.name = first.value;
+  if (last) registerData.last_name = last.value;
+  if (pin) registerData.pin = pin.value;
+}
+
 function startRegister() { registerData={color:COLORS[0],icon:ICONS[0]}; setView('register'); }
 async function createUser() {
-  const first=document.getElementById('regFirst')?.value?.trim();
-  const last=document.getElementById('regLast')?.value?.trim()||'';
-  const pinVal=document.getElementById('regPin')?.value?.trim();
+  const first=(document.getElementById('regFirst')?.value?.trim())||registerData.name||'';
+  const last=(document.getElementById('regLast')?.value?.trim())||registerData.last_name||'';
+  const pinVal=(document.getElementById('regPin')?.value?.trim())||registerData.pin||'';
   if (!first){alert('Please enter your first name');return;}
   if (!pinVal||pinVal.length!==4||isNaN(pinVal)){alert('Please enter a 4-digit secret code');return;}
   if (!registerData.color){alert('Please pick a color');return;}
@@ -809,7 +818,7 @@ function renderForm() {
   <div class="form-btns">
     ${formStep>0?`<button class="btn btn-secondary" style="flex:1" onclick="formStepChange(-1)">← Back</button>`:''}
     ${formStep<TOTAL_STEPS-1
-      ?`<button class="btn btn-primary" style="flex:2" onclick="formStepChange(1)">Next →</button>`
+      ?`<button class="btn btn-primary" style="flex:2" onclick="formStepChange(1)" ${formStep===2&&(formData.cSpecies||formData.cCount)?'disabled title="Add or clear the pending catch first"':''}>Next →</button>`
       :`<button class="btn btn-primary btn-full" id="btnSave" onclick="saveOuting()">${isEdit?'✅ Save Changes':'✅ Save Outing'}</button>`}
   </div>`;
 }
@@ -864,12 +873,16 @@ function renderStep1() {
 
 function renderStep2() {
   const canAdd=formData.cSpecies&&formData.cCount&&parseInt(formData.cCount)>0&&(formData.cSpecies!=='Other'||formData.customSpecies);
+  const hasPending=formData.cSpecies||formData.cCount;
   const all=[...formData.catches,...formData.groupCatches];
   const total=all.reduce((s,c)=>s+(c.count||0),0);
   const userCompanionNames=formData.companionUserIds.map(id=>{const u=userById(id);return u?fullName(u):'Unknown';});
   const persons=['Group','Me',...userCompanionNames,...formData.companions];
   return `<div class="step-title">🐟 What Did You Catch?</div>
-  <div class="step-sub">Pick a species, enter a count, then tap Add Catch.</div>
+  <div style="background:#1a2a0a;border:1px solid #3a5a1a;border-radius:8px;padding:10px 14px;margin-bottom:14px;color:#8aaa60;font-size:13px">
+    👉 Select species → enter count → tap <strong style="color:#6aaa30">Add Catch</strong>. Repeat for each fish type. Each catch must be added before moving on.
+  </div>
+  ${hasPending&&!canAdd?`<div style="background:#2a1a0a;border:1px solid #8a6a20;border-radius:8px;padding:8px 14px;margin-bottom:10px;color:#f0c040;font-size:12px">⚠️ You have an unfinished catch — tap Add Catch or clear the fields before continuing.</div>`:''}
   <div class="chips-label">Species</div>
   <div class="chips">${[...species,'Other'].map(o=>`<button class="chip${formData.cSpecies===o?' active':''}" onclick="captureAndSet('cSpecies','${o}')">${o}</button>`).join('')}</div>
   ${formData.cSpecies==='Other'?`<div class="field" style="margin-top:-10px"><div class="field-label">What kind of fish?</div><input type="text" id="fCustomSpecies" value="${formData.customSpecies||''}" placeholder="e.g. White Bass, Gar..." oninput="formData.customSpecies=this.value;rerender()"></div>`:''}
@@ -881,7 +894,7 @@ function renderStep2() {
   ${all.length?`<div class="catch-log">
     <div class="catch-log-header"><span style="color:#6a8a50;font-size:12px;text-transform:uppercase">Catch Log</span><span style="color:#f0c040;font-size:16px;font-weight:bold">${total} total</span></div>
     ${all.map((c,i)=>`<div class="catch-row"><span style="color:#c8e6a0;font-size:14px">${c.person?c.person+': ':''}${c.species}</span><div class="catch-right"><span style="color:#f0c040;font-size:18px;font-weight:bold">${c.count}</span><button class="catch-del-btn" onclick="removeCatch(${i})">✕</button></div></div>`).join('')}
-  </div>`:`<div style="text-align:center;color:#3a5a1a;padding:20px 0;font-size:13px">No catches added yet</div>`}`;
+  </div>`:`<div style="text-align:center;color:#3a5a1a;padding:20px 0;font-size:13px">No catches added yet — use the button above to add each fish type</div>`}`;
 }
 
 function renderStep3() {
@@ -1023,12 +1036,22 @@ async function saveOuting() {
       outings.unshift(outing);
     }
 
-    // Save catches
+    // Save catches — track successes and failures individually
     catches[outingId]=catches[outingId]||[];
+    let catchesSaved=0, catchesFailed=0;
     for (const c of allCatches) {
-      const row={id:genId(),trip_id:outingId,user_id:currentUser.id,species:c.species,count:c.count,person:c.person||'',created_at:now};
-      await sbInsert('FishingCatches',row);
-      catches[outingId].push(row);
+      try {
+        const row={id:genId(),trip_id:outingId,user_id:currentUser.id,species:c.species,count:c.count,person:c.person||'',created_at:now};
+        await sbInsert('FishingCatches',row);
+        catches[outingId].push(row);
+        catchesSaved++;
+      } catch(e) {
+        console.error('Catch save failed:',c,e);
+        catchesFailed++;
+      }
+    }
+    if (catchesFailed>0) {
+      showMsg(`⚠️ Outing saved but ${catchesFailed} catch${catchesFailed>1?'es':''} failed to save. Please edit the outing to re-enter them.`,'warn',8000);
     }
 
     // Share with companion users
@@ -1052,7 +1075,10 @@ async function saveOuting() {
       }
     }
 
-    showMsg('✅ Outing saved!','ok');
+    if (catchesFailed===0) {
+      const catchMsg = catchesSaved>0 ? ` · ${catchesSaved} catch${catchesSaved>1?'es':''} saved` : '';
+      showMsg(`✅ Outing saved!${catchMsg}`,'ok');
+    }
     setView('log');
   } catch(e) {
     showMsg('⚠️ Save failed: '+e.message,'warn');
