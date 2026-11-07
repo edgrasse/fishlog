@@ -13,7 +13,7 @@
 <title>🎣 Fish Log</title>
 <script>
 // Force reload if a newer version is available
-const CACHE_VERSION = 'fishlog-v2.6-20260507';
+const CACHE_VERSION = 'fishlog-v2.7-20261107';
 const stored = localStorage.getItem('fishlog-cache-version');
 if (stored && stored !== CACHE_VERSION) {
   localStorage.setItem('fishlog-cache-version', CACHE_VERSION);
@@ -210,8 +210,8 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 </div>
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-const VERSION = 'v2.6 · 2026-05-07';
-const WORKER_URL = 'https://grasse-apps-proxy.ed-53c.workers.dev';
+const VERSION = 'v2.7 · 2026-11-07';
+const WORKER_URL = 'https://fishinglog-proxy.ed-53c.workers.dev'; // own Worker (was grasse-apps-proxy)
 const APP_ID = 'fishinglog';
 const SUPABASE_URL = 'https://viprflxaudxjwsvytrnn.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_kkR-mwmqJ26-Yu5BXZC17A_UIrw7782';
@@ -1256,6 +1256,11 @@ async function init() {
 }
 
 init();
+
+// Service worker (sw.js sits next to this file). Failure is harmless.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
 </script>
 </body>
 </html>
