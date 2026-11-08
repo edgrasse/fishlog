@@ -13,7 +13,7 @@
 <title>🎣 Fish Log</title>
 <script>
 // Force reload if a newer version is available
-const CACHE_VERSION = 'fishlog-v2.7-20261107';
+const CACHE_VERSION = 'fishlog-v2.9-20261108';
 const stored = localStorage.getItem('fishlog-cache-version');
 if (stored && stored !== CACHE_VERSION) {
   localStorage.setItem('fishlog-cache-version', CACHE_VERSION);
@@ -210,7 +210,7 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 </div>
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-const VERSION = 'v2.7 · 2026-11-07';
+const VERSION = 'v2.9 · 2026-11-08';
 const WORKER_URL = 'https://fishinglog-proxy.ed-53c.workers.dev'; // own Worker (was grasse-apps-proxy)
 const APP_ID = 'fishinglog';
 const SUPABASE_URL = 'https://viprflxaudxjwsvytrnn.supabase.co';
@@ -244,6 +244,16 @@ let faqOpen = {};
 let pendingPhotos = []; // {file, previewUrl, uploaded, url}
 
 try { const s = localStorage.getItem('fishlog-user'); if (s) currentUser = JSON.parse(s); } catch {}
+
+// ── SAFE OUTPUT HELPERS ───────────────────────────────────────
+// esc(): use for ANY user/database text shown on screen or placed in an HTML attribute.
+// jsq(): use for a value inside an onclick="..." handler, e.g. onclick="open(${jsq(id)})".
+// safeUrl(): use for photo links (only https:// links are allowed).
+function esc(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function jsq(v) { return esc(JSON.stringify(String(v == null ? '' : v))); }
+function safeUrl(u) { u = String(u == null ? '' : u); return /^https:\/\//i.test(u) ? u : ''; }
 
 // ── WORKER (tables) ───────────────────────────────────────────
 async function workerCall(payload) {
@@ -393,8 +403,8 @@ function render() {
         </div>
       </div>
       <div class="user-badge">
-        <div class="user-dot" style="background:${currentUser.color}"></div>
-        <span class="user-name-label">${currentUser.icon} ${fullName(currentUser)}</span>
+        <div class="user-dot" style="background:${esc(currentUser.color)}"></div>
+        <span class="user-name-label">${esc(currentUser.icon)} ${esc(fullName(currentUser))}</span>
         <button class="switch-user" onclick="setView('editprofile')" style="margin-right:6px">✏️ Profile</button>
         <button class="switch-user" onclick="switchUser()">Switch</button>
       </div>
@@ -431,9 +441,9 @@ function renderAuth() {
     ${users.length > 0 ? `
     <div style="color:#6a8a50;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Returning angler?</div>
     <div style="margin-bottom:20px">
-      ${users.map(u => `<button class="user-option" onclick="selectUser('${u.id}')">
-        <div class="user-option-dot" style="background:${u.color}"></div>
-        <div><div style="color:#c8e6a0;font-size:16px;font-weight:bold">${u.icon} ${fullName(u)}</div><div style="color:#6a8a50;font-size:12px">Tap to enter secret code</div></div>
+      ${users.map(u => `<button class="user-option" onclick="selectUser(${jsq(u.id)})">
+        <div class="user-option-dot" style="background:${esc(u.color)}"></div>
+        <div><div style="color:#c8e6a0;font-size:16px;font-weight:bold">${esc(u.icon)} ${esc(fullName(u))}</div><div style="color:#6a8a50;font-size:12px">Tap to enter secret code</div></div>
       </button>`).join('')}
     </div>
     <div class="auth-divider">— or —</div>` : ''}
@@ -446,8 +456,8 @@ function renderAuth() {
 
 function renderPin() {
   return `<div class="auth-screen">
-    <div style="font-size:50px;margin-bottom:12px">${pinTarget?.icon || '🎣'}</div>
-    <div style="color:#c8e6a0;font-size:22px;font-weight:bold;margin-bottom:4px">${pinTarget ? fullName(pinTarget) : ''}</div>
+    <div style="font-size:50px;margin-bottom:12px">${esc(pinTarget?.icon || '🎣')}</div>
+    <div style="color:#c8e6a0;font-size:22px;font-weight:bold;margin-bottom:4px">${pinTarget ? esc(fullName(pinTarget)) : ''}</div>
     <div style="color:#6a8a50;font-size:14px;margin-bottom:4px">Enter your 4-digit secret code</div>
     <div class="pin-dots">${[0,1,2,3].map(i=>`<div class="pin-dot ${i<pinBuffer.length?'filled':''}"></div>`).join('')}</div>
     <div style="color:#e07070;font-size:13px;min-height:24px;margin:8px 0" id="pinErr"></div>
@@ -464,8 +474,8 @@ function renderRegister() {
     <div style="color:#c8e6a0;font-size:22px;font-weight:bold;margin-bottom:4px">Create Your Profile</div>
     <div style="color:#6a8a50;font-size:13px;margin-bottom:24px">Takes about 30 seconds!</div>
     <div class="field-row">
-      <div class="field"><div class="field-label">First Name</div><input type="text" id="regFirst" placeholder="Ed" value="${registerData.name||''}" autocomplete="off"></div>
-      <div class="field"><div class="field-label">Last Name</div><input type="text" id="regLast" placeholder="Smith" value="${registerData.last_name||''}" autocomplete="off"></div>
+      <div class="field"><div class="field-label">First Name</div><input type="text" id="regFirst" placeholder="Ed" value="${esc(registerData.name||'')}" autocomplete="off"></div>
+      <div class="field"><div class="field-label">Last Name</div><input type="text" id="regLast" placeholder="Smith" value="${esc(registerData.last_name||'')}" autocomplete="off"></div>
     </div>
     <div class="chips-label">Pick your color</div>
     <div class="color-options">${COLORS.map(c=>`<div class="color-opt ${registerData.color===c?'selected':''}" style="background:${c}" onclick="captureRegisterFields();registerData.color='${c}';render()"></div>`).join('')}</div>
@@ -473,7 +483,7 @@ function renderRegister() {
     <div class="icon-options">${ICONS.map(ic=>`<div class="icon-opt ${registerData.icon===ic?'selected':''}" onclick="captureRegisterFields();registerData.icon='${ic}';render()">${ic}</div>`).join('')}</div>
     <div class="field">
       <div class="field-label">Choose a 4-digit secret code</div>
-      <input type="number" id="regPin" placeholder="4 digits you will remember" value="${registerData.pin||''}" style="letter-spacing:8px;font-size:20px">
+      <input type="number" id="regPin" placeholder="4 digits you will remember" value="${esc(registerData.pin||'')}" style="letter-spacing:8px;font-size:20px">
       <div style="color:#6a8a50;font-size:12px;margin-top:6px">You will need this to log outings. If you forget it, just ask Ed.</div>
     </div>
     <button class="btn btn-primary btn-full" onclick="createUser()" style="margin-bottom:12px">Create My Profile →</button>
@@ -499,7 +509,7 @@ function renderOnboard() {
   return `<div style="padding:24px 20px 40px">
     <div style="text-align:center;margin-bottom:24px">
       <div style="font-size:50px;margin-bottom:12px">🎉</div>
-      <div style="color:#c8e6a0;font-size:22px;font-weight:bold;margin-bottom:8px">You're all set, ${registerData.createdName || 'Angler'}!</div>
+      <div style="color:#c8e6a0;font-size:22px;font-weight:bold;margin-bottom:8px">You're all set, ${esc(registerData.createdName || 'Angler')}!</div>
       <div style="color:#6a8a50;font-size:14px;line-height:1.6">Add Fish Log to your home screen for one-tap access.</div>
     </div>
     <div class="device-tabs">
@@ -614,21 +624,21 @@ function renderCard(t) {
     .map(u=>fullName(u));
   const companions=[...new Set([...catchPersons,...sharedUserNames])];
 
-  return `<div class="outing-card ${t.status==='draft'?'draft':''}" onclick="openOuting('${t.id}')">
-    ${isOwn?`<button class="outing-del" onclick="event.stopPropagation();deleteOuting('${t.id}')">✕</button>`:''}
-    <div class="outing-name">${t.location_name||t.location_type||(t.status==='draft'?'📍 Saved Spot':'Unnamed Spot')}</div>
-    <div class="outing-meta">${fmtDate(t.date)}${t.location_type?' · '+t.location_type:''}</div>
+  return `<div class="outing-card ${t.status==='draft'?'draft':''}" onclick="openOuting(${jsq(t.id)})">
+    ${isOwn?`<button class="outing-del" onclick="event.stopPropagation();deleteOuting(${jsq(t.id)})">✕</button>`:''}
+    <div class="outing-name">${esc(t.location_name||t.location_type||(t.status==='draft'?'📍 Saved Spot':'Unnamed Spot'))}</div>
+    <div class="outing-meta">${esc(fmtDate(t.date))}${t.location_type?' · '+esc(t.location_type):''}</div>
     <div class="outing-tags">
       ${t.status==='draft'?'<span class="tag draft-tag">📍 Draft — tap to complete</span>':''}
-      ${sp.map(s=>`<span class="tag">${s}</span>`).join('')}
+      ${sp.map(s=>`<span class="tag">${esc(s)}</span>`).join('')}
       ${t._shared?'<span class="tag" style="background:#2a3a5a">shared</span>':''}
     </div>
-    ${companions.length?`<div style="margin-top:8px;display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span style="color:#4a6a2a;font-size:11px">👥</span>${companions.map(c=>`<span style="color:#8aaa60;font-size:12px">${c}</span>`).join('<span style="color:#3a5a1a;font-size:11px"> · </span>')}</div>`:''}
-    ${tp.length?`<div class="card-photos">${tp.slice(0,4).map(p=>`<img class="card-photo" src="${p.url}" onclick="event.stopPropagation();openLightbox('${p.url}')" loading="lazy">`).join('')}</div>`:''}
+    ${companions.length?`<div style="margin-top:8px;display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span style="color:#4a6a2a;font-size:11px">👥</span>${companions.map(c=>`<span style="color:#8aaa60;font-size:12px">${esc(c)}</span>`).join('<span style="color:#3a5a1a;font-size:11px"> · </span>')}</div>`:''}
+    ${tp.length?`<div class="card-photos">${tp.slice(0,4).map(p=>`<img class="card-photo" src="${esc(safeUrl(p.url))}" onclick="event.stopPropagation();openLightbox(${jsq(safeUrl(p.url))})" loading="lazy">`).join('')}</div>`:''}
     <div class="outing-footer">
       <div class="outing-angler">
-        <div class="angler-dot" style="background:${userColor(t.user_id)}"></div>
-        <span style="color:#6a8a50;font-size:12px">${showAllUsers?userDisplayName(t.user_id):(t.user_name||userDisplayName(t.user_id))}</span>
+        <div class="angler-dot" style="background:${esc(userColor(t.user_id))}"></div>
+        <span style="color:#6a8a50;font-size:12px">${esc(showAllUsers?userDisplayName(t.user_id):(t.user_name||userDisplayName(t.user_id)))}</span>
       </div>
       <div class="outing-fish">
         <span class="outing-fish-num">${t.status==='draft'?'—':total}</span>
@@ -681,28 +691,28 @@ function renderDetail() {
   return `<button class="detail-back" onclick="setView('log')">← Back</button>
     ${t.status==='draft'?`<div class="draft-banner">
       <div style="color:#f0c040;font-size:14px;font-weight:bold;margin-bottom:4px">📍 Saved Spot — Draft Outing</div>
-      <div style="color:#8a6a40;font-size:13px">GPS captured on ${fmtDate(t.date)}. Complete the details when done fishing.</div>
+      <div style="color:#8a6a40;font-size:13px">GPS captured on ${esc(fmtDate(t.date))}. Complete the details when done fishing.</div>
       ${isOwn?`<button class="btn btn-primary btn-full" style="margin-top:12px" onclick="completeDraft()">✏️ Complete This Outing</button>`:''}
     </div>`:''}
-    <div style="color:#c8e6a0;font-size:24px;font-weight:bold;margin-bottom:4px">${t.location_name||t.location_type||'Unnamed Spot'}</div>
-    <div style="color:#6a8a50;margin-bottom:18px">${fmtDate(t.date)}${t.start_time?' · '+t.start_time:''}${t.end_time?' – '+t.end_time:''}</div>
+    <div style="color:#c8e6a0;font-size:24px;font-weight:bold;margin-bottom:4px">${esc(t.location_name||t.location_type||'Unnamed Spot')}</div>
+    <div style="color:#6a8a50;margin-bottom:18px">${esc(fmtDate(t.date))}${t.start_time?' · '+esc(t.start_time):''}${t.end_time?' – '+esc(t.end_time):''}</div>
     <div class="detail-grid">
-      ${chips.map(([k,v])=>`<div class="detail-chip"><div class="detail-chip-label">${k}</div><div class="detail-chip-val">${v}</div></div>`).join('')}
+      ${chips.map(([k,v])=>`<div class="detail-chip"><div class="detail-chip-label">${k}</div><div class="detail-chip-val">${esc(v)}</div></div>`).join('')}
       ${hasGps?`<div class="detail-chip"><div class="detail-chip-label">GPS</div><div class="detail-chip-val" style="font-size:11px;font-family:monospace">${parseFloat(t.latitude).toFixed(4)}, ${parseFloat(t.longitude).toFixed(4)}</div></div>`:''}
     </div>
     <div class="section"><div class="section-title">Catch · ${total} fish</div>
-      ${tc.length?tc.map(c=>`<div class="catch-detail-row"><span style="color:#c8e6a0;font-size:15px">${c.person?c.person+': ':''}${c.species}</span><span style="color:#f0c040;font-size:20px;font-weight:bold">${c.count}</span></div>`).join(''):'<div style="color:#6a8a50">No catches recorded.</div>'}
+      ${tc.length?tc.map(c=>`<div class="catch-detail-row"><span style="color:#c8e6a0;font-size:15px">${c.person?esc(c.person)+': ':''}${esc(c.species)}</span><span style="color:#f0c040;font-size:20px;font-weight:bold">${esc(c.count)}</span></div>`).join(''):'<div style="color:#6a8a50">No catches recorded.</div>'}
     </div>
-    ${t.bait?`<div class="section"><div class="section-title">Bait / Lures</div><div style="display:flex;flex-wrap:wrap;gap:6px">${t.bait.split(',').map(b=>`<span style="background:#3a5a1a;color:#c8e6a0;border-radius:20px;padding:5px 13px;font-size:13px">${b.trim()}</span>`).join('')}</div></div>`:''}
+    ${t.bait?`<div class="section"><div class="section-title">Bait / Lures</div><div style="display:flex;flex-wrap:wrap;gap:6px">${t.bait.split(',').map(b=>`<span style="background:#3a5a1a;color:#c8e6a0;border-radius:20px;padding:5px 13px;font-size:13px">${esc(b.trim())}</span>`).join('')}</div></div>`:''}
     ${tp.length?`<div class="section"><div class="section-title">📷 Photos (${tp.length})</div>
-      <div class="photo-gallery">${tp.map(p=>`<img class="gallery-photo" src="${p.url}" onclick="openLightbox('${p.url}')" loading="lazy">`).join('')}</div>
+      <div class="photo-gallery">${tp.map(p=>`<img class="gallery-photo" src="${esc(safeUrl(p.url))}" onclick="openLightbox(${jsq(safeUrl(p.url))})" loading="lazy">`).join('')}</div>
     </div>`:''}
-    ${t.notes?`<div class="section"><div class="section-title">Notes</div><div style="color:#c8e6a0;line-height:1.7;font-size:14px">${t.notes}</div></div>`:''}
-    ${hasGps?`<div class="section"><div class="section-title">Location</div><a href="https://maps.google.com/?q=${t.latitude},${t.longitude}" target="_blank" style="color:#6aaa30;font-size:14px">📍 View on Google Maps →</a></div>`:''}
+    ${t.notes?`<div class="section"><div class="section-title">Notes</div><div style="color:#c8e6a0;line-height:1.7;font-size:14px">${esc(t.notes)}</div></div>`:''}
+    ${hasGps?`<div class="section"><div class="section-title">Location</div><a href="https://maps.google.com/?q=${encodeURIComponent(t.latitude)},${encodeURIComponent(t.longitude)}" target="_blank" style="color:#6aaa30;font-size:14px">📍 View on Google Maps →</a></div>`:''}
     ${isOwn?`
     <div style="display:flex;gap:10px;margin-top:8px">
       <button class="btn btn-ghost" style="flex:1" onclick="editOuting()">✏️ Edit Outing</button>
-      <button class="btn btn-ghost" style="flex:1" onclick="addPhotosToOuting('${t.id}')">📷 Add Photos</button>
+      <button class="btn btn-ghost" style="flex:1" onclick="addPhotosToOuting(${jsq(t.id)})">📷 Add Photos</button>
     </div>`:''}
     <div class="saved-badge">✅ Saved in Fish Log</div>`;
 }
@@ -825,20 +835,20 @@ function renderForm() {
 
 function renderStep0() {
   return `<div class="step-title">📍 Where & When</div>
-  <div class="field"><div class="field-label">Date</div><input type="date" id="fDate" value="${formData.date}" onchange="formData.date=this.value"></div>
-  <div class="field"><div class="field-label">Spot Name</div><input type="text" id="fSpot" value="${formData.locationName}" placeholder="e.g. Neenah Bridge, My Channel..."></div>
+  <div class="field"><div class="field-label">Date</div><input type="date" id="fDate" value="${esc(formData.date)}" onchange="formData.date=this.value"></div>
+  <div class="field"><div class="field-label">Spot Name</div><input type="text" id="fSpot" value="${esc(formData.locationName)}" placeholder="e.g. Neenah Bridge, My Channel..."></div>
   <div class="chips-label">Location Type</div>
   <div class="chips">${LOC_TYPES.map(o=>`<button class="chip${formData.locationType===o?' active':''}" onclick="captureAndSet('locationType','${o}')">${o}</button>`).join('')}</div>
   <div class="field-label">GPS Coordinates</div>
   <div class="gps-row">
-    <div class="field"><input type="text" id="fLat" value="${formData.latitude}" placeholder="Latitude"></div>
-    <div class="field"><input type="text" id="fLng" value="${formData.longitude}" placeholder="Longitude"></div>
+    <div class="field"><input type="text" id="fLat" value="${esc(formData.latitude)}" placeholder="Latitude"></div>
+    <div class="field"><input type="text" id="fLng" value="${esc(formData.longitude)}" placeholder="Longitude"></div>
     <button class="btn-gps" onclick="captureGPS()">📍 Get</button>
   </div>
   <div id="gpsStatus" class="gps-status">${formData.latitude?'✅ GPS: '+parseFloat(formData.latitude).toFixed(4)+', '+parseFloat(formData.longitude).toFixed(4):''}</div>
   <div class="field-row" style="margin-top:12px">
-    <div class="field"><div class="field-label">Start Time</div><input type="time" id="fStart" value="${formData.startTime}" onchange="formData.startTime=this.value"></div>
-    <div class="field"><div class="field-label">End Time</div><input type="time" id="fEnd" value="${formData.endTime}" onchange="formData.endTime=this.value"></div>
+    <div class="field"><div class="field-label">Start Time</div><input type="time" id="fStart" value="${esc(formData.startTime)}" onchange="formData.startTime=this.value"></div>
+    <div class="field"><div class="field-label">End Time</div><input type="time" id="fEnd" value="${esc(formData.endTime)}" onchange="formData.endTime=this.value"></div>
   </div>`;
 }
 
@@ -848,10 +858,10 @@ function renderStep1() {
   <div class="step-sub">Leave blank if you fished alone.</div>
   ${otherUsers.length?`<div style="margin-bottom:16px">
     <div class="field-label">Select from existing anglers</div>
-    ${otherUsers.map(u=>`<div class="companion-item" style="cursor:pointer" onclick="toggleUserCompanion('${u.id}')">
+    ${otherUsers.map(u=>`<div class="companion-item" style="cursor:pointer" onclick="toggleUserCompanion(${jsq(u.id)})">
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:12px;height:12px;border-radius:50%;background:${u.color}"></div>
-        <span style="color:#c8e6a0;font-size:15px">${u.icon} ${fullName(u)}</span>
+        <div style="width:12px;height:12px;border-radius:50%;background:${esc(u.color)}"></div>
+        <span style="color:#c8e6a0;font-size:15px">${esc(u.icon)} ${esc(fullName(u))}</span>
       </div>
       <div style="width:22px;height:22px;border-radius:11px;border:2px solid ${formData.companionUserIds.includes(u.id)?'#6aaa30':'#3a5a1a'};background:${formData.companionUserIds.includes(u.id)?'#6aaa30':'transparent'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">${formData.companionUserIds.includes(u.id)?'✓':''}</div>
     </div>`).join('')}
@@ -861,7 +871,7 @@ function renderStep1() {
     <input class="companion-input" type="text" id="compInput" placeholder="Type a name" onkeydown="if(event.key==='Enter')addComp()">
     <button class="btn btn-primary" style="padding:13px 18px" onclick="addComp()">Add</button>
   </div>
-  <div>${formData.companions.map((c,i)=>`<div class="companion-item"><span style="color:#c8e6a0;font-size:15px">👤 ${c}</span><button style="background:none;border:none;color:#7a4a3a;cursor:pointer;font-size:20px" onclick="removeComp(${i})">✕</button></div>`).join('')}</div>
+  <div>${formData.companions.map((c,i)=>`<div class="companion-item"><span style="color:#c8e6a0;font-size:15px">👤 ${esc(c)}</span><button style="background:none;border:none;color:#7a4a3a;cursor:pointer;font-size:20px" onclick="removeComp(${i})">✕</button></div>`).join('')}</div>
   ${(formData.companions.length>0||formData.companionUserIds.length>0)?`<div class="sep-box">
     <div style="color:#c8e6a0;font-size:15px;margin-bottom:14px">Track catches separately per person?</div>
     <div style="display:flex;gap:10px">
@@ -884,16 +894,16 @@ function renderStep2() {
   </div>
   ${hasPending&&!canAdd?`<div style="background:#2a1a0a;border:1px solid #8a6a20;border-radius:8px;padding:8px 14px;margin-bottom:10px;color:#f0c040;font-size:12px">⚠️ You have an unfinished catch — tap Add Catch or clear the fields before continuing.</div>`:''}
   <div class="chips-label">Species</div>
-  <div class="chips">${[...species,'Other'].map(o=>`<button class="chip${formData.cSpecies===o?' active':''}" onclick="captureAndSet('cSpecies','${o}')">${o}</button>`).join('')}</div>
-  ${formData.cSpecies==='Other'?`<div class="field" style="margin-top:-10px"><div class="field-label">What kind of fish?</div><input type="text" id="fCustomSpecies" value="${formData.customSpecies||''}" placeholder="e.g. White Bass, Gar..." oninput="formData.customSpecies=this.value;rerender()"></div>`:''}
-  <div class="field"><div class="field-label">Count</div><input type="number" id="fCount" value="${formData.cCount||''}" placeholder="How many?" oninput="formData.cCount=this.value"></div>
-  ${formData.separateCounts?`<div class="chips-label">Whose catch?</div><div class="chips">${persons.map(o=>`<button class="chip${(formData.cPerson||'Group')===o?' active':''}" onclick="captureAndSet('cPerson','${o}')">${o}</button>`).join('')}</div>`:''}
+  <div class="chips">${[...species,'Other'].map(o=>`<button class="chip${formData.cSpecies===o?' active':''}" onclick="captureAndSet('cSpecies',${jsq(o)})">${esc(o)}</button>`).join('')}</div>
+  ${formData.cSpecies==='Other'?`<div class="field" style="margin-top:-10px"><div class="field-label">What kind of fish?</div><input type="text" id="fCustomSpecies" value="${esc(formData.customSpecies||'')}" placeholder="e.g. White Bass, Gar..." oninput="formData.customSpecies=this.value;rerender()"></div>`:''}
+  <div class="field"><div class="field-label">Count</div><input type="number" id="fCount" value="${esc(formData.cCount||'')}" placeholder="How many?" oninput="formData.cCount=this.value"></div>
+  ${formData.separateCounts?`<div class="chips-label">Whose catch?</div><div class="chips">${persons.map(o=>`<button class="chip${(formData.cPerson||'Group')===o?' active':''}" onclick="captureAndSet('cPerson',${jsq(o)})">${esc(o)}</button>`).join('')}</div>`:''}
   <button class="btn ${canAdd?'btn-primary':'btn-ghost'} btn-full" style="margin-bottom:20px" onclick="addCatch()" ${canAdd?'':'disabled'}>
-    ${canAdd?`+ Add ${formData.cCount} ${formData.cSpecies==='Other'?formData.customSpecies||'Other':formData.cSpecies}`:'+ Select species & count first'}
+    ${canAdd?`+ Add ${esc(formData.cCount)} ${esc(formData.cSpecies==='Other'?formData.customSpecies||'Other':formData.cSpecies)}`:'+ Select species & count first'}
   </button>
   ${all.length?`<div class="catch-log">
     <div class="catch-log-header"><span style="color:#6a8a50;font-size:12px;text-transform:uppercase">Catch Log</span><span style="color:#f0c040;font-size:16px;font-weight:bold">${total} total</span></div>
-    ${all.map((c,i)=>`<div class="catch-row"><span style="color:#c8e6a0;font-size:14px">${c.person?c.person+': ':''}${c.species}</span><div class="catch-right"><span style="color:#f0c040;font-size:18px;font-weight:bold">${c.count}</span><button class="catch-del-btn" onclick="removeCatch(${i})">✕</button></div></div>`).join('')}
+    ${all.map((c,i)=>`<div class="catch-row"><span style="color:#c8e6a0;font-size:14px">${c.person?esc(c.person)+': ':''}${esc(c.species)}</span><div class="catch-right"><span style="color:#f0c040;font-size:18px;font-weight:bold">${esc(c.count)}</span><button class="catch-del-btn" onclick="removeCatch(${i})">✕</button></div></div>`).join('')}
   </div>`:`<div style="text-align:center;color:#3a5a1a;padding:20px 0;font-size:13px">No catches added yet — use the button above to add each fish type</div>`}`;
 }
 
@@ -905,7 +915,7 @@ function renderStep3() {
   <div class="chips">${WIND.map(o=>`<button class="chip${formData.wind===o?' active':''}" onclick="captureAndSet('wind','${o}')">${o}</button>`).join('')}</div>
   <div class="chips-label">Sky</div>
   <div class="chips">${SKY.map(o=>`<button class="chip${formData.sky===o?' active':''}" onclick="captureAndSet('sky','${o}')">${o}</button>`).join('')}</div>
-  <div class="field"><div class="field-label">Notes</div><textarea id="fNotes" placeholder="Anything worth remembering...">${formData.notes}</textarea></div>`;
+  <div class="field"><div class="field-label">Notes</div><textarea id="fNotes" placeholder="Anything worth remembering...">${esc(formData.notes)}</textarea></div>`;
 }
 
 function renderStep4() {
@@ -1009,6 +1019,7 @@ async function saveOuting() {
   const allCatches=[...formData.catches,...formData.groupCatches];
   const now=new Date().toISOString();
   const outingId=formData.id||genId();
+  const failures=[]; // every step that fails is recorded here, never swallowed
 
   // Check for new custom species and save them
   const newSpecies=allCatches.map(c=>c.species).filter(s=>!species.includes(s)&&s!=='Other');
@@ -1016,7 +1027,7 @@ async function saveOuting() {
     try {
       await sbInsert('FishingSpecies',{id:genId(),name:sp,added_by:currentUser.id,created_at:now});
       species.push(sp);
-    } catch {}
+    } catch(e) { console.error('Species save failed:',sp,e); failures.push('new species "'+sp+'"'); }
   }
 
   const outing={id:outingId,user_id:currentUser.id,user_name:fullName(currentUser),date:formData.date,location_name:formData.locationName,location_type:formData.locationType,latitude:formData.latitude,longitude:formData.longitude,start_time:formData.startTime,end_time:formData.endTime,bait:formData.bait.join(', '),wind:formData.wind,sky:formData.sky,notes:formData.notes,status:'complete',created_at:now};
@@ -1028,8 +1039,11 @@ async function saveOuting() {
       if(idx>=0) outings[idx]={...outings[idx],...outing};
       // Delete old catches and re-save fresh ones
       if (formData.isEditing) {
-        for (const c of catches[outingId]||[]) { try { await sbDelete('FishingCatches',c.id); } catch {} }
-        catches[outingId] = [];
+        // A failed delete throws (caught below) so we never add new catches on top of old ones.
+        for (const c of [...(catches[outingId]||[])]) {
+          await sbDelete('FishingCatches',c.id);
+          catches[outingId]=catches[outingId].filter(x=>x.id!==c.id);
+        }
       }
     } else {
       await sbInsert('FishingTrips',outing);
@@ -1048,41 +1062,60 @@ async function saveOuting() {
       } catch(e) {
         console.error('Catch save failed:',c,e);
         catchesFailed++;
+        failures.push('catch: '+c.species+' ×'+c.count);
       }
-    }
-    if (catchesFailed>0) {
-      showMsg(`⚠️ Outing saved but ${catchesFailed} catch${catchesFailed>1?'es':''} failed to save. Please edit the outing to re-enter them.`,'warn',8000);
     }
 
     // Share with companion users
+    // Skips anyone already shared with, so a retry or an edit never creates duplicates.
+    const outingRef=outings.find(t=>t.id===outingId);
     for (const uid of formData.companionUserIds) {
+      if (outingRef && (outingRef._sharedWith||[]).includes(uid)) continue;
       try {
         await sbInsert('FishingSharedOutings',{id:genId(),trip_id:outingId,user_id:uid,created_at:now});
-      } catch {}
+        if (outingRef) outingRef._sharedWith=[...(outingRef._sharedWith||[]),uid];
+      } catch(e) {
+        console.error('Share failed:',uid,e);
+        const u=userById(uid);
+        failures.push('companion share: '+(u?fullName(u):'unknown'));
+      }
     }
 
     // Upload photos
     photos[outingId]=photos[outingId]||[];
     if (pendingPhotos.length>0) {
       showMsg(`📷 Uploading ${pendingPhotos.length} photo${pendingPhotos.length!==1?'s':''}...`,'loading',0);
-      for (const p of pendingPhotos) {
+      for (const p of [...pendingPhotos]) {
         try {
           const url=await uploadPhoto(p.file,outingId);
           const photoRow={id:genId(),trip_id:outingId,user_id:currentUser.id,url,caption:'',created_at:now};
           await sbInsert('FishingPhotos',photoRow);
           photos[outingId].push(photoRow);
-        } catch(e){console.error('Photo upload error',e);}
+          pendingPhotos=pendingPhotos.filter(x=>x!==p); // done: a retry won't upload it again
+        } catch(e){
+          console.error('Photo upload error',e);
+          failures.push('photo');
+        }
       }
     }
 
-    if (catchesFailed===0) {
-      const catchMsg = catchesSaved>0 ? ` · ${catchesSaved} catch${catchesSaved>1?'es':''} saved` : '';
-      showMsg(`✅ Outing saved!${catchMsg}`,'ok');
+    if (failures.length>0) {
+      // Stay on the form with everything still filled in. Switch to edit mode on this
+      // same outing so tapping Save again updates it (no duplicate outing, catches or shares).
+      formData.id=outingId; formData.isEditing=true; formData.isCompleting=false;
+      rerender();
+      showMsg('⚠️ Outing saved, but these did not save: '+failures.join(', ')+'. Tap Save Changes to retry.','warn',0);
+      return;
     }
+    const catchMsg = catchesSaved>0 ? ` · ${catchesSaved} catch${catchesSaved>1?'es':''} saved` : '';
+    showMsg(`✅ Outing saved!${catchMsg}`,'ok');
     setView('log');
   } catch(e) {
-    showMsg('⚠️ Save failed: '+e.message,'warn');
-    if(btn){btn.disabled=false;btn.textContent='✅ Save Outing';}
+    // The outing itself may already be saved. Make a retry update it, not duplicate it.
+    if (outings.some(t=>t.id===outingId)) { formData.id=outingId; formData.isEditing=true; formData.isCompleting=false; rerender(); }
+    showMsg('⚠️ Save failed: '+e.message+'. Your entries are still here. Tap Save to retry.','warn',0);
+    const b2=document.getElementById('btnSave');
+    if(b2){b2.disabled=false;b2.textContent=formData.isEditing?'✅ Save Changes':'✅ Save Outing';}
   }
 }
 
@@ -1095,8 +1128,8 @@ function renderEditProfile() {
     <div style="color:#6a8a50;font-size:13px;margin-bottom:24px">Update your details below.</div>
 
     <div class="field-row">
-      <div class="field"><div class="field-label">First Name</div><input type="text" id="epFirst" value="${u.name||''}" placeholder="Ed"></div>
-      <div class="field"><div class="field-label">Last Name</div><input type="text" id="epLast" value="${u.last_name||''}" placeholder="Smith"></div>
+      <div class="field"><div class="field-label">First Name</div><input type="text" id="epFirst" value="${esc(u.name||'')}" placeholder="Ed"></div>
+      <div class="field"><div class="field-label">Last Name</div><input type="text" id="epLast" value="${esc(u.last_name||'')}" placeholder="Smith"></div>
     </div>
 
     <div class="chips-label">Color</div>
@@ -1183,22 +1216,22 @@ function renderStats() {
   const lb=Object.entries(byUser).sort((a,b)=>b[1]-a[1]);
   return `
     <div class="stats-grid">
-      ${[{l:'Outings',v:complete.length},{l:'Total Fish',v:totalFish},{l:'Top Species',v:topSp[0]?.[0]?.split('/')[0]||'—'},{l:'Top Spot',v:topSt[0]?.[0]||'—'}].map(({l,v})=>`<div class="stat-card"><div class="stat-val">${v}</div><div class="stat-label">${l}</div></div>`).join('')}
+      ${[{l:'Outings',v:complete.length},{l:'Total Fish',v:totalFish},{l:'Top Species',v:topSp[0]?.[0]?.split('/')[0]||'—'},{l:'Top Spot',v:topSt[0]?.[0]||'—'}].map(({l,v})=>`<div class="stat-card"><div class="stat-val">${esc(v)}</div><div class="stat-label">${l}</div></div>`).join('')}
     </div>
     ${lb.length?`<div class="section"><div class="section-title">🏆 Leaderboard — All Anglers</div>
       ${lb.map(([uid,fish],i)=>`<div class="leaderboard-row">
-        <div class="lb-left"><span style="color:#f0c040;font-size:18px;width:28px">${['🥇','🥈','🥉'][i]||''}</span><div class="lb-dot" style="background:${userColor(uid)}"></div><span style="color:#c8e6a0;font-size:15px;font-weight:bold">${userDisplayName(uid)}</span></div>
+        <div class="lb-left"><span style="color:#f0c040;font-size:18px;width:28px">${['🥇','🥈','🥉'][i]||''}</span><div class="lb-dot" style="background:${esc(userColor(uid))}"></div><span style="color:#c8e6a0;font-size:15px;font-weight:bold">${esc(userDisplayName(uid))}</span></div>
         <div style="text-align:right"><div style="color:#f0c040;font-size:20px;font-weight:bold">${fish}</div><div style="color:#6a8a50;font-size:11px">fish</div></div>
       </div>`).join('')}
     </div>`:''}
     ${topSp.length?`<div class="section"><div class="section-title">By Species</div>
       ${topSp.map(([sp,ct])=>`<div class="bar-row">
-        <div class="bar-label-row"><span style="color:#c8e6a0;font-size:14px">${sp}</span><span style="color:#f0c040;font-weight:bold">${ct}</span></div>
+        <div class="bar-label-row"><span style="color:#c8e6a0;font-size:14px">${esc(sp)}</span><span style="color:#f0c040;font-weight:bold">${ct}</span></div>
         <div class="bar-bg"><div class="bar-fill" style="width:${Math.round(ct/totalFish*100)}%"></div></div>
       </div>`).join('')}
     </div>`:''}
     ${topSt.length?`<div class="section"><div class="section-title">Top Spots</div>
-      ${topSt.slice(0,6).map(([sp,ct])=>`<div class="spot-list-row"><span style="color:#c8e6a0;font-size:13px">📍 ${sp}</span><span style="color:#f0c040;font-weight:bold">${ct} fish</span></div>`).join('')}
+      ${topSt.slice(0,6).map(([sp,ct])=>`<div class="spot-list-row"><span style="color:#c8e6a0;font-size:13px">📍 ${esc(sp)}</span><span style="color:#f0c040;font-weight:bold">${ct} fish</span></div>`).join('')}
     </div>`:''}`;
 }
 
@@ -1248,7 +1281,7 @@ async function init() {
   document.getElementById('app').innerHTML='<div class="loading">⏳ Loading Fish Log...</div>';
   try { await loadData(); }
   catch(e) {
-    document.getElementById('app').innerHTML=`<div class="loading" style="color:#e07070">⚠️ Connection error<br><small>${e.message}</small><br><br><button onclick="init()" style="background:#4a7a20;border:none;color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer">Retry</button></div>`;
+    document.getElementById('app').innerHTML=`<div class="loading" style="color:#e07070">⚠️ Connection error<br><small>${esc(e.message)}</small><br><br><button onclick="init()" style="background:#4a7a20;border:none;color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer">Retry</button></div>`;
     return;
   }
   if(!currentUser) setView('auth');
