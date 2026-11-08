@@ -13,7 +13,7 @@
 <title>🎣 Fish Log</title>
 <script>
 // Force reload if a newer version is available
-const CACHE_VERSION = 'fishlog-v2.9-20261108';
+const CACHE_VERSION = 'fishlog-v3.0-20261108';
 const stored = localStorage.getItem('fishlog-cache-version');
 if (stored && stored !== CACHE_VERSION) {
   localStorage.setItem('fishlog-cache-version', CACHE_VERSION);
@@ -210,7 +210,7 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 </div>
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-const VERSION = 'v2.9 · 2026-11-08';
+const VERSION = 'v3.0 · 2026-11-08';
 const WORKER_URL = 'https://fishinglog-proxy.ed-53c.workers.dev'; // own Worker (was grasse-apps-proxy)
 const APP_ID = 'fishinglog';
 const SUPABASE_URL = 'https://viprflxaudxjwsvytrnn.supabase.co';
@@ -240,10 +240,19 @@ let formStep = 0;
 let pinBuffer = '';
 let pinTarget = null;
 let registerData = {};
+let authToken = null;      // login ticket from the Worker (kept in phone storage)
+let pinError = '';         // message shown on the code screen
+let tempPin = '';          // code just typed, kept in memory only for the forced code change
+let pendingUsers = [];     // admin only: sign-ups waiting for approval
+let adminNotice = '';      // admin only: result of the last admin action
 let faqOpen = {};
 let pendingPhotos = []; // {file, previewUrl, uploaded, url}
 
-try { const s = localStorage.getItem('fishlog-user'); if (s) currentUser = JSON.parse(s); } catch {}
+try {
+  const s = localStorage.getItem('fishlog-user');
+  if (s) { currentUser = JSON.parse(s); if (currentUser) delete currentUser.pin_hash; } // old versions stored a code hash here
+  authToken = localStorage.getItem('fishlog-token') || null;
+} catch {}
 
 // ── SAFE OUTPUT HELPERS ───────────────────────────────────────
 // esc(): use for ANY user/database text shown on screen or placed in an HTML attribute.
@@ -256,18 +265,89 @@ function jsq(v) { return esc(JSON.stringify(String(v == null ? '' : v))); }
 function safeUrl(u) { u = String(u == null ? '' : u); return /^https:\/\//i.test(u) ? u : ''; }
 
 // ── WORKER (tables) ───────────────────────────────────────────
-async function workerCall(payload) {
-  const r = await fetch(WORKER_URL, {
+function saveSession(user, token) {
+  currentUser = { id: user.id, name: user.name, last_name: user.last_name || '', color: user.color, icon: user.icon,
+                  is_admin: user.is_admin === true, must_change_pin: user.must_change_pin === true };
+  if (token) authToken = token;
+  try {
+    localStorage.setItem('fishlog-user', JSON.stringify(currentUser));
+    if (authToken) localStorage.setItem('fishlog-token', authToken);
+  } catch {}
+}
+function clearSession() {
+  authToken = null;
+  try { localStorage.removeItem('fishlog-token'); localStorage.removeItem('fishlog-user'); } catch {}
+}
+
+// Every call to the Worker goes through here. It attaches the login ticket. If the
+// ticket has expired (401 + code "auth") it asks for the secret code once, then
+// retries the call, so an outing being entered is never lost.
+async function rawCall(payload, opts = {}) {
+  const send = () => fetch(WORKER_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ appId: APP_ID, ...payload })
+    body: JSON.stringify({ appId: APP_ID, ...payload, ...((authToken && !opts.noToken) ? { token: authToken } : {}) })
   });
-  if (!r.ok) throw new Error('Worker error: ' + r.status);
-  const json = await r.json();
+  let r = await send();
+  let json = null;
+  try { json = await r.json(); } catch {}
+  if (r.status === 401 && json && json.code === 'auth' && !opts.noRelogin && currentUser && !currentUser.readonly) {
+    if (await askRelogin()) {
+      r = await send();
+      json = null;
+      try { json = await r.json(); } catch {}
+    }
+  }
+  if (!r.ok) {
+    const e = new Error((json && json.error) ? json.error : 'Worker error: ' + r.status);
+    e.status = r.status; e.data = json || {};
+    throw e;
+  }
+  return json;
+}
+async function workerCall(payload) {
+  const json = await rawCall(payload, { noToken: payload.method === 'SELECT' });
   if (Array.isArray(json)) return { data: json };
   if (json.data !== undefined) return json;
   if (json.error) throw new Error(json.error);
   return { data: [] };
+}
+// Login / sign-up / admin methods return plain JSON (not table rows).
+async function authCall(method, extra = {}, opts = {}) { return rawCall({ method, ...extra }, opts); }
+
+// Small pop-up asking for the secret code again when the login has expired.
+let reloginPromise = null;
+function askRelogin() {
+  if (reloginPromise) return reloginPromise;
+  reloginPromise = new Promise(resolve => {
+    const mk = (tag, css, text) => { const el = document.createElement(tag); if (css) el.style.cssText = css; if (text) el.textContent = text; return el; };
+    const wrap = mk('div', 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px');
+    const box = mk('div', 'background:#1a2a1a;border:1px solid #3a5a1a;border-radius:14px;padding:22px;max-width:320px;width:100%;text-align:center');
+    box.appendChild(mk('div', 'color:#c8e6a0;font-size:18px;font-weight:bold;margin-bottom:6px', 'Please log in again'));
+    box.appendChild(mk('div', 'color:#8aaa60;font-size:13px;margin-bottom:14px', 'Your login expired. Anything you were entering is still here. Type your secret code to continue.'));
+    const input = mk('input', 'width:100%;padding:12px;font-size:22px;letter-spacing:8px;text-align:center;border-radius:8px;border:1px solid #3a5a1a;background:#0f1a0f;color:#c8e6a0;margin-bottom:8px;box-sizing:border-box');
+    input.type = 'password'; input.inputMode = 'numeric'; input.maxLength = 6; input.autocomplete = 'off';
+    const msg = mk('div', 'color:#e07070;font-size:13px;min-height:18px;margin-bottom:8px');
+    const ok = mk('button', 'background:#4a7a20;border:none;color:#fff;padding:11px 20px;border-radius:8px;font-size:15px;cursor:pointer;margin-right:8px', 'Log in');
+    const cancel = mk('button', 'background:none;border:1px solid #3a5a1a;color:#8aaa60;padding:11px 20px;border-radius:8px;font-size:15px;cursor:pointer', 'Cancel');
+    const done = v => { wrap.remove(); reloginPromise = null; resolve(v); };
+    ok.onclick = async () => {
+      try {
+        const res = await authCall('AUTH_LOGIN', { userId: currentUser.id, pin: input.value }, { noRelogin: true });
+        saveSession(res.user, res.token);
+        done(true);
+      } catch (e) {
+        msg.textContent = e.status === 429 ? 'Too many wrong tries. Try again in a few minutes.' : 'That code did not work, try again.';
+        input.value = '';
+      }
+    };
+    cancel.onclick = () => done(false);
+    box.append(input, msg, ok, cancel);
+    wrap.appendChild(box);
+    document.body.appendChild(wrap);
+    input.focus();
+  });
+  return reloginPromise;
 }
 async function sbGet(table, filters) { return workerCall({ method: 'SELECT', table, filters: filters || '' }); }
 async function sbInsert(table, row) { return workerCall({ method: 'INSERT', table, data: row }); }
@@ -324,7 +404,6 @@ async function resizeImage(file, maxWidth) {
 
 // ── HELPERS ───────────────────────────────────────────────────
 function genId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 6); }
-function hashPin(pin) { let h = 0; for (let c of pin) { h = ((h << 5) - h) + c.charCodeAt(0); h |= 0; } return h.toString(16); }
 function fmtDate(d) { try { return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); } catch { return d; } }
 function showMsg(msg, type, dur = 4000) {
   const el = document.getElementById('saveMsg');
@@ -387,7 +466,7 @@ function userDisplayName(id) { const u = userById(id); return u ? fullName(u) : 
 // ── RENDER ────────────────────────────────────────────────────
 function render() {
   const app = document.getElementById('app');
-  const isAuth = !currentUser || ['auth','register','pin','onboard'].includes(currentView);
+  const isAuth = !currentUser || ['auth','register','pin','onboard','pending','mustchange'].includes(currentView);
   if (isAuth) { app.innerHTML = renderAuth(); return; }
 
   app.innerHTML = `
@@ -405,7 +484,8 @@ function render() {
       <div class="user-badge">
         <div class="user-dot" style="background:${esc(currentUser.color)}"></div>
         <span class="user-name-label">${esc(currentUser.icon)} ${esc(fullName(currentUser))}</span>
-        <button class="switch-user" onclick="setView('editprofile')" style="margin-right:6px">✏️ Profile</button>
+        ${currentUser.is_admin ? `<button class="switch-user" onclick="openAdmin()" style="margin-right:6px">🛡 Admin${pendingUsers.length ? ' (' + pendingUsers.length + ')' : ''}</button>` : ''}
+        ${currentUser.readonly ? '' : `<button class="switch-user" onclick="setView('editprofile')" style="margin-right:6px">✏️ Profile</button>`}
         <button class="switch-user" onclick="switchUser()">Switch</button>
       </div>
       ${['log','stats','faq'].includes(currentView) ? `<div class="tabs">
@@ -423,6 +503,7 @@ function render() {
   else if (currentView === 'stats') body.innerHTML = renderStats();
   else if (currentView === 'faq') body.innerHTML = renderFAQ();
   else if (currentView === 'editprofile') body.innerHTML = renderEditProfile();
+  else if (currentView === 'admin' && currentUser.is_admin) body.innerHTML = renderAdmin();
   if (currentView === 'new') attachFormEvents();
 }
 
@@ -431,6 +512,8 @@ function renderAuth() {
   if (currentView === 'register') return renderRegister();
   if (currentView === 'pin') return renderPin();
   if (currentView === 'onboard') return renderOnboard();
+  if (currentView === 'pending') return renderPending();
+  if (currentView === 'mustchange') return renderMustChange();
 
   return `<div style="padding:20px 16px 40px">
     <div style="text-align:center;padding:32px 0 24px">
@@ -460,7 +543,7 @@ function renderPin() {
     <div style="color:#c8e6a0;font-size:22px;font-weight:bold;margin-bottom:4px">${pinTarget ? esc(fullName(pinTarget)) : ''}</div>
     <div style="color:#6a8a50;font-size:14px;margin-bottom:4px">Enter your 4-digit secret code</div>
     <div class="pin-dots">${[0,1,2,3].map(i=>`<div class="pin-dot ${i<pinBuffer.length?'filled':''}"></div>`).join('')}</div>
-    <div style="color:#e07070;font-size:13px;min-height:24px;margin:8px 0" id="pinErr"></div>
+    <div style="color:#e07070;font-size:13px;min-height:24px;margin:8px 0" id="pinErr">${esc(pinError)}</div>
     <div class="numpad">
       ${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(n=>`<button class="numpad-btn ${n==='⌫'?'del':''}" onclick="pinPress('${n}')">${n}</button>`).join('')}
     </div>
@@ -528,29 +611,141 @@ function renderOnboard() {
   </div>`;
 }
 
-async function selectUser(id) { pinTarget = users.find(u=>u.id===id); pinBuffer=''; setView('pin'); }
+async function selectUser(id) { pinTarget = users.find(u=>u.id===id); pinBuffer=''; pinError=''; setView('pin'); }
 function pinPress(n) {
   if (n==='⌫') { pinBuffer=pinBuffer.slice(0,-1); render(); return; }
   if (n===''||pinBuffer.length>=4) return;
-  pinBuffer+=n; render();
+  pinError=''; pinBuffer+=n; render();
   if (pinBuffer.length===4) setTimeout(verifyPin,100);
 }
 async function verifyPin() {
-  if (hashPin(pinBuffer)===pinTarget.pin_hash) {
-    currentUser=pinTarget;
-    try { localStorage.setItem('fishlog-user',JSON.stringify(currentUser)); } catch {}
-    pinBuffer='';
-    showMsg('Welcome back, '+fullName(currentUser)+'!','ok');
-    setView('log');
-  } else {
-    pinBuffer='';
-    const err=document.getElementById('pinErr');
-    if (err) err.textContent='❌ Wrong secret code — try again';
+  const pin = pinBuffer;
+  pinBuffer = '';
+  try {
+    // The Worker checks the code. The phone never sees anyone's code or hash.
+    const res = await authCall('AUTH_LOGIN', { userId: pinTarget.id, pin }, { noRelogin: true });
+    saveSession(res.user, res.token);
+    pinError = '';
+    if (res.mustChangePin) { tempPin = pin; setView('mustchange'); return; }
+    await finishLogin();
+    showMsg('Welcome back, ' + fullName(currentUser) + '!', 'ok');
+  } catch (e) {
+    const d = e.data || {};
+    if (e.status === 403 && d.pending) { setView('pending'); return; }
+    if (e.status === 401) {
+      pinError = (d.attemptsLeft != null && d.attemptsLeft <= 2)
+        ? `❌ Wrong secret code — ${d.attemptsLeft} ${d.attemptsLeft === 1 ? 'try' : 'tries'} left`
+        : '❌ Wrong secret code — try again';
+    } else if (e.status === 429) {
+      pinError = `🔒 Too many wrong tries. Try again in ${Math.max(1, Math.ceil((d.retryAfter || 900) / 60))} minutes.`;
+    } else {
+      pinError = '❌ Could not reach the server. Check your connection and try again.';
+    }
     render();
   }
 }
-function switchUser() { currentUser=null; try{localStorage.removeItem('fishlog-user');}catch{} setView('auth'); }
-function viewOnly() { currentUser={id:'readonly',name:'Viewer',last_name:'',color:'#6a8a50',icon:'👁',pin_hash:'',readonly:true}; setView('log'); }
+// After any successful login: re-read the data (so "shared with me" outings are marked
+// for this angler) and, for the admin, check who is waiting for approval.
+async function finishLogin() {
+  await loadData();
+  if (currentUser && currentUser.is_admin) await loadPending();
+  setView('log');
+}
+async function loadPending() {
+  try { const r = await authCall('ADMIN_LIST_PENDING', {}, { noRelogin: true }); pendingUsers = r.pending || []; }
+  catch { pendingUsers = []; }
+}
+function switchUser() { clearSession(); pendingUsers = []; currentUser = null; setView('auth'); }
+function viewOnly() { authToken = null; currentUser = { id: 'readonly', name: 'Viewer', last_name: '', color: '#6a8a50', icon: '👁', readonly: true }; setView('log'); }
+
+// Shown after sign-up, and to a pending angler who tries to log in.
+function renderPending() {
+  return `<div class="auth-screen">
+    <div style="font-size:50px;margin-bottom:12px">⏳</div>
+    <div style="color:#c8e6a0;font-size:22px;font-weight:bold;margin-bottom:10px">Waiting for approval</div>
+    <div style="color:#8aaa60;font-size:14px;line-height:1.6;margin-bottom:24px;max-width:320px">${registerData.createdName ? esc(registerData.createdName) + ', thanks for signing up! ' : ''}Ed needs to approve your profile before you can use Fish Log. Check back soon, then tap your name and enter your secret code.</div>
+    <button class="btn btn-primary" style="width:100%;margin-bottom:12px" onclick="setView('onboard')">📱 Add Fish Log to my home screen</button>
+    <button class="btn btn-secondary" style="width:100%" onclick="init()">🔄 Check again</button>
+  </div>`;
+}
+
+// Shown after an admin reset: the angler must choose their own code.
+function renderMustChange() {
+  return `<div style="padding:24px 20px 40px">
+    <div style="font-size:50px;text-align:center;margin-bottom:12px">🔑</div>
+    <div style="color:#c8e6a0;font-size:22px;font-weight:bold;margin-bottom:6px;text-align:center">Choose a new secret code</div>
+    <div style="color:#6a8a50;font-size:13px;margin-bottom:20px;text-align:center">Ed gave you a temporary code. Pick your own 4-digit code to keep using Fish Log.</div>
+    ${tempPin ? '' : `<div class="field"><div class="field-label">Temporary code from Ed</div><input type="number" id="mcOld" placeholder="Temporary code" style="letter-spacing:6px"></div>`}
+    <div class="field"><div class="field-label">New 4-digit code</div><input type="number" id="mcNew" placeholder="4 digits you will remember" style="letter-spacing:6px"></div>
+    <div class="field"><div class="field-label">Type it again</div><input type="number" id="mcNew2" placeholder="Same 4 digits" style="letter-spacing:6px"></div>
+    <div id="mcMsg" style="color:#e07070;font-size:13px;min-height:20px;margin-bottom:12px"></div>
+    <button class="btn btn-primary btn-full" onclick="submitMustChange()">Save New Code</button>
+  </div>`;
+}
+async function submitMustChange() {
+  const g = id => document.getElementById(id)?.value?.trim() || '';
+  const oldPin = tempPin || g('mcOld'), n1 = g('mcNew'), n2 = g('mcNew2');
+  const msg = document.getElementById('mcMsg');
+  const fail = t => { if (msg) msg.textContent = t; };
+  if (!oldPin) return fail('❌ Enter the temporary code');
+  if (!/^\d{4}$/.test(n1)) return fail('❌ New code must be exactly 4 digits');
+  if (n1 !== n2) return fail('❌ The two codes do not match');
+  if (n1 === oldPin) return fail('❌ Pick a different code than the temporary one');
+  try {
+    const res = await authCall('AUTH_CHANGE_PIN', { oldPin, newPin: n1 });
+    saveSession(res.user, res.token);
+    tempPin = '';
+    await finishLogin();
+    showMsg('✅ New code saved', 'ok');
+  } catch (e) {
+    fail(e.status === 401 ? '❌ The temporary code is wrong' : e.status === 429 ? '🔒 Too many wrong tries. Try again later.' : '❌ ' + e.message);
+  }
+}
+
+// ── ADMIN (only the angler marked is_admin sees this) ──────────
+function renderAdmin() {
+  const others = users.filter(u => u.id !== currentUser.id);
+  return `<div style="padding:0 0 40px">
+    <button class="detail-back" onclick="setView('log')">← Back</button>
+    <div style="color:#c8e6a0;font-size:22px;font-weight:bold;margin-bottom:4px">🛡 Admin</div>
+    ${adminNotice ? `<div style="background:#1a2a0a;border:1px solid #4a7a20;border-radius:8px;padding:12px 14px;margin:12px 0;color:#c8e6a0;font-size:14px;line-height:1.5">${esc(adminNotice)}</div>` : ''}
+    <div class="section"><div class="section-title">Waiting for approval (${pendingUsers.length})</div>
+      ${pendingUsers.length ? pendingUsers.map(p => `<div class="companion-item"><span style="color:#c8e6a0;font-size:15px">${esc(fullName(p))}</span><div style="display:flex;gap:6px"><button class="btn btn-primary" style="padding:8px 14px" onclick="adminApprove(${jsq(p.id)})">Approve</button><button class="btn btn-ghost" style="padding:8px 14px" onclick="adminReject(${jsq(p.id)})">Reject</button></div></div>`).join('') : '<div style="color:#6a8a50;font-size:14px">No one is waiting.</div>'}
+    </div>
+    <div class="section"><div class="section-title">Reset a secret code</div>
+      <div style="color:#6a8a50;font-size:13px;margin-bottom:10px">Gives them a temporary 4-digit code. They choose their own at next login.</div>
+      ${others.map(u => `<div class="companion-item"><span style="color:#c8e6a0;font-size:15px">${esc(u.icon)} ${esc(fullName(u))}</span><button class="btn btn-ghost" style="padding:8px 14px" onclick="adminReset(${jsq(u.id)})">Reset code</button></div>`).join('')}
+    </div>
+  </div>`;
+}
+async function openAdmin() { adminNotice = ''; await loadPending(); setView('admin'); }
+async function adminRefresh() {
+  await loadPending();
+  try { const r = await sbGet('FishingUsers', 'order=name.asc'); users = r.data || users; } catch {}
+  render();
+}
+async function adminApprove(id) {
+  const p = pendingUsers.find(x => x.id === id);
+  try { await authCall('ADMIN_APPROVE', { userId: id }); adminNotice = '✅ ' + (p ? fullName(p) : 'Angler') + ' approved. They can log in now.'; }
+  catch (e) { adminNotice = '⚠️ Could not approve: ' + e.message; }
+  await adminRefresh();
+}
+async function adminReject(id) {
+  const p = pendingUsers.find(x => x.id === id);
+  if (!confirm('Reject and delete the sign-up from ' + (p ? fullName(p) : 'this person') + '?')) return;
+  try { await authCall('ADMIN_REJECT', { userId: id }); adminNotice = '🗑 Sign-up rejected and removed.'; }
+  catch (e) { adminNotice = '⚠️ Could not reject: ' + e.message; }
+  await adminRefresh();
+}
+async function adminReset(id) {
+  const u = userById(id);
+  if (!confirm('Reset the secret code for ' + (u ? fullName(u) : 'this angler') + '?')) return;
+  try {
+    const r = await authCall('ADMIN_RESET_PIN', { userId: id });
+    adminNotice = '🔑 Temporary code for ' + r.name + ': ' + r.tempPin + ' — tell them now, it will not be shown again. They choose their own code when they log in.';
+  } catch (e) { adminNotice = '⚠️ Could not reset: ' + e.message; }
+  render();
+}
 function captureRegisterFields() {
   const first = document.getElementById('regFirst');
   const last = document.getElementById('regLast');
@@ -569,14 +764,12 @@ async function createUser() {
   if (!pinVal||pinVal.length!==4||isNaN(pinVal)){alert('Please enter a 4-digit secret code');return;}
   if (!registerData.color){alert('Please pick a color');return;}
   if (!registerData.icon){alert('Please pick an icon');return;}
-  const newUser={id:genId(),name:first,last_name:last,pin_hash:hashPin(pinVal),color:registerData.color,icon:registerData.icon,created_at:new Date().toISOString()};
   try {
-    await sbInsert('FishingUsers',newUser);
-    users.push(newUser);
-    currentUser=newUser;
-    try{localStorage.setItem('fishlog-user',JSON.stringify(currentUser));}catch{}
+    // The Worker stores the code securely and creates the angler as "pending" until Ed approves.
+    await authCall('AUTH_REGISTER',{name:first,last_name:last,color:registerData.color,icon:registerData.icon,pin:pinVal},{noRelogin:true});
     registerData.createdName=first;
-    setView('onboard');
+    registerData.pin='';
+    setView('pending');
   } catch(e){alert('Error creating profile: '+e.message);}
 }
 
@@ -1165,32 +1358,37 @@ async function saveProfile() {
 
   if (!first) { if(msg) msg.textContent = '❌ First name is required'; return; }
 
-  let newPinHash = currentUser.pin_hash;
-
-  // Handle PIN change
   if (newPin) {
     if (!oldPin) { if(msg) msg.textContent = '❌ Enter your current secret code to change it'; return; }
-    if (hashPin(oldPin) !== currentUser.pin_hash) { if(msg) msg.textContent = '❌ Current secret code is wrong'; return; }
-    if (newPin.length !== 4 || isNaN(newPin)) { if(msg) msg.textContent = '❌ New code must be exactly 4 digits'; return; }
-    newPinHash = hashPin(newPin);
+    if (!/^\d{4}$/.test(newPin)) { if(msg) msg.textContent = '❌ New code must be exactly 4 digits'; return; }
   }
 
   const color = currentUser._editColor || currentUser.color;
   const icon = currentUser._editIcon || currentUser.icon;
 
   try {
-    const updates = { name: first, last_name: last, color, icon, pin_hash: newPinHash };
-    await sbUpdate('FishingUsers', currentUser.id, updates);
+    // 1. Secret code first. The Worker checks the current code, so a wrong one saves nothing.
+    if (newPin) {
+      try {
+        const r = await authCall('AUTH_CHANGE_PIN', { oldPin, newPin });
+        saveSession(r.user, r.token);
+      } catch (e) {
+        const d = e.data || {};
+        if(msg) msg.textContent = e.status === 401
+          ? '❌ Current secret code is wrong' + ((d.attemptsLeft != null && d.attemptsLeft <= 2) ? ' — ' + d.attemptsLeft + ' ' + (d.attemptsLeft === 1 ? 'try' : 'tries') + ' left' : '')
+          : e.status === 429 ? '🔒 Too many wrong tries. Try again in ' + Math.max(1, Math.ceil((d.retryAfter || 900) / 60)) + ' minutes.'
+          : '❌ Save failed: ' + e.message;
+        return;
+      }
+    }
 
-    // Update local state
-    Object.assign(currentUser, updates);
-    delete currentUser._editColor;
-    delete currentUser._editIcon;
-    try { localStorage.setItem('fishlog-user', JSON.stringify(currentUser)); } catch {}
+    // 2. Name, color, icon
+    const res = await authCall('AUTH_UPDATE_PROFILE', { name: first, last_name: last, color, icon });
+    saveSession(res.user);
 
     // Update users array
     const idx = users.findIndex(u => u.id === currentUser.id);
-    if (idx >= 0) users[idx] = { ...users[idx], ...updates };
+    if (idx >= 0) users[idx] = { ...users[idx], name: currentUser.name, last_name: currentUser.last_name, color: currentUser.color, icon: currentUser.icon };
 
     showMsg('✅ Profile updated!', 'ok');
     setView('log');
@@ -1245,7 +1443,7 @@ const FAQ_ITEMS=[
   {q:'What is a draft outing?',a:'A draft is a saved GPS spot that hasn\'t been completed yet. It shows with a dashed border. Tap it to add your catch totals and details when you\'re done fishing.'},
   {q:'How do I see everyone\'s catches?',a:'Tap "All Anglers" at the top of the Outings screen. The Stats tab always shows everyone\'s totals and the full leaderboard.'},
   {q:'I got a new phone — how do I get my account back?',a:'Open the app on your new phone, tap your name from the list, and enter your 4-digit secret code. All your history will come right back.'},
-  {q:'I forgot my secret code — what do I do?',a:'Contact Ed and he can look it up or reset it for you.'},
+  {q:'I forgot my secret code — what do I do?',a:'Ask Ed to reset it. He will give you a temporary 4-digit code. Log in with it, and Fish Log will ask you to choose your own. After 5 wrong tries in a row your name is locked for 15 minutes.'},
   {q:'How do I add the app to my home screen on iPhone?',a:'1. Open the app in Safari\n2. Tap the Share button (box with arrow ↑) at the bottom\n3. Scroll down and tap "Add to Home Screen"\n4. Tap "Add"\nThe Fish Log icon will appear on your home screen.'},
   {q:'How do I add the app to my home screen on Android?',a:'1. Open the app in Chrome\n2. Tap the three-dot menu ⋮ in the top right\n3. Tap "Add to Home Screen"\n4. Tap "Add"\nThe Fish Log icon will appear on your home screen.'},
   {q:'Can I delete an outing?',a:'Yes — tap the ✕ button on the outing card. You\'ll be asked to confirm. This permanently deletes the outing and all its catches and photos.'},
@@ -1283,6 +1481,28 @@ async function init() {
   catch(e) {
     document.getElementById('app').innerHTML=`<div class="loading" style="color:#e07070">⚠️ Connection error<br><small>${esc(e.message)}</small><br><br><button onclick="init()" style="background:#4a7a20;border:none;color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer">Retry</button></div>`;
     return;
+  }
+  // Returning angler: renew the login ticket. No ticket (e.g. first run after the login
+  // upgrade) or an expired one means they type their secret code once.
+  if (currentUser && !currentUser.readonly) {
+    if (authToken) {
+      try {
+        const res = await authCall('AUTH_REFRESH', {}, { noRelogin: true });
+        saveSession(res.user, res.token);
+      } catch (e) {
+        if (e.status === 401) { authToken = null; try { localStorage.removeItem('fishlog-token'); } catch {} }
+        // any other error (no signal at the lake) keeps the saved login so the app still opens
+      }
+    }
+    if (!authToken) {
+      const u = users.find(x => x.id === currentUser.id);
+      currentUser = null;
+      if (u) { pinTarget = u; pinBuffer = ''; pinError = ''; setView('pin'); }
+      else { clearSession(); setView('auth'); }
+      return;
+    }
+    if (currentUser.must_change_pin) { setView('mustchange'); return; }
+    if (currentUser.is_admin) await loadPending();
   }
   if(!currentUser) setView('auth');
   else setView('log');
