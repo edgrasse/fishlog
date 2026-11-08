@@ -1,7 +1,7 @@
 // Fish Log service worker
 // Bump CACHE_NAME on EVERY deploy (keep it in step with VERSION / CACHE_VERSION
 // in fishing-tracker.html) so home-screen apps pick up the new version.
-const CACHE_NAME = 'fishlog-v3.2';
+const CACHE_NAME = 'fishlog-v3.3';
 
 self.addEventListener('install', event => {
   self.skipWaiting();

@@ -13,7 +13,7 @@
 <title>🎣 Fish Log</title>
 <script>
 // Force reload if a newer version is available
-const CACHE_VERSION = 'fishlog-v3.2-20261108';
+const CACHE_VERSION = 'fishlog-v3.3-20261108';
 const stored = localStorage.getItem('fishlog-cache-version');
 if (stored && stored !== CACHE_VERSION) {
   localStorage.setItem('fishlog-cache-version', CACHE_VERSION);
@@ -134,6 +134,8 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 
 /* Photo gallery in detail */
 .photo-gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 4px; }
+.photo-wrap { position: relative; }
+.photo-del { position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; border-radius: 50%; border: none; background: rgba(0,0,0,0.65); color: #fff; font-size: 14px; cursor: pointer; }
 .gallery-photo { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 10px; border: 1px solid #3a5a1a; cursor: pointer; }
 .photo-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .photo-lightbox img { max-width: 100%; max-height: 90vh; border-radius: 8px; object-fit: contain; }
@@ -210,7 +212,7 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 </div>
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-const VERSION = 'v3.2 · 2026-11-08';
+const VERSION = 'v3.3 · 2026-11-08';
 const WORKER_URL = 'https://fishinglog-proxy.ed-53c.workers.dev'; // own Worker (was grasse-apps-proxy)
 const APP_ID = 'fishinglog';
 const STORAGE_BUCKET = 'fishing-photos';
@@ -870,6 +872,18 @@ async function deleteOuting(id) {
   } catch(e){showMsg('⚠️ Delete failed','warn');}
 }
 
+async function deletePhoto(tripId, photoId) {
+  if (!confirm('Delete this photo?\nThis cannot be undone.')) return;
+  showMsg('Deleting photo...','loading',0);
+  try {
+    await sbDelete('FishingPhotos',photoId);
+    photos[tripId]=(photos[tripId]||[]).filter(p=>p.id!==photoId);
+    showMsg('✅ Photo deleted','ok');
+    const body=document.getElementById('appBody');
+    if (body && currentView==='detail') body.innerHTML=renderDetail(); else render();
+  } catch(e){ console.error('Photo delete failed',e); showMsg('⚠️ Photo delete failed','warn',0); alert('Photo could not be deleted. Check your connection and try again.'); }
+}
+
 // ── QUICK SPOT ────────────────────────────────────────────────
 async function quickSpot() {
   if (!navigator.geolocation){alert('GPS not available');return;}
@@ -913,7 +927,7 @@ function renderDetail() {
     </div>
     ${t.bait?`<div class="section"><div class="section-title">Bait / Lures</div><div style="display:flex;flex-wrap:wrap;gap:6px">${t.bait.split(',').map(b=>`<span style="background:#3a5a1a;color:#c8e6a0;border-radius:20px;padding:5px 13px;font-size:13px">${esc(b.trim())}</span>`).join('')}</div></div>`:''}
     ${tp.length?`<div class="section"><div class="section-title">📷 Photos (${tp.length})</div>
-      <div class="photo-gallery">${tp.map(p=>`<img class="gallery-photo" src="${esc(safeUrl(p.url))}" onclick="openLightbox(${jsq(safeUrl(p.url))})" loading="lazy">`).join('')}</div>
+      <div class="photo-gallery">${tp.map(p=>`<div class="photo-wrap"><img class="gallery-photo" src="${esc(safeUrl(p.url))}" onclick="openLightbox(${jsq(safeUrl(p.url))})" loading="lazy">${isOwn?`<button class="photo-del" aria-label="Delete photo" onclick="deletePhoto(${jsq(t.id)},${jsq(p.id)})">✕</button>`:''}</div>`).join('')}</div>
     </div>`:''}
     ${t.notes?`<div class="section"><div class="section-title">Notes</div><div style="color:#c8e6a0;line-height:1.7;font-size:14px">${esc(t.notes)}</div></div>`:''}
     ${hasGps?`<div class="section"><div class="section-title">Location</div><a href="https://maps.google.com/?q=${encodeURIComponent(t.latitude)},${encodeURIComponent(t.longitude)}" target="_blank" style="color:#6aaa30;font-size:14px">📍 View on Google Maps →</a></div>`:''}
