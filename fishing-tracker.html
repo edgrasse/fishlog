@@ -13,7 +13,7 @@
 <title>🎣 Fish Log</title>
 <script>
 // Force reload if a newer version is available
-const CACHE_VERSION = 'fishlog-v3.0-20261108';
+const CACHE_VERSION = 'fishlog-v3.1-20261108';
 const stored = localStorage.getItem('fishlog-cache-version');
 if (stored && stored !== CACHE_VERSION) {
   localStorage.setItem('fishlog-cache-version', CACHE_VERSION);
@@ -210,7 +210,7 @@ body { background: #0d1a0d; color: #c8e6a0; font-family: 'Georgia', serif; max-w
 </div>
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-const VERSION = 'v3.0 · 2026-11-08';
+const VERSION = 'v3.1 · 2026-11-08';
 const WORKER_URL = 'https://fishinglog-proxy.ed-53c.workers.dev'; // own Worker (was grasse-apps-proxy)
 const APP_ID = 'fishinglog';
 const SUPABASE_URL = 'https://viprflxaudxjwsvytrnn.supabase.co';
@@ -633,7 +633,7 @@ async function verifyPin() {
     const d = e.data || {};
     if (e.status === 403 && d.pending) { setView('pending'); return; }
     if (e.status === 401) {
-      pinError = (d.attemptsLeft != null && d.attemptsLeft <= 2)
+      pinError = (d.attemptsLeft != null)
         ? `❌ Wrong secret code — ${d.attemptsLeft} ${d.attemptsLeft === 1 ? 'try' : 'tries'} left`
         : '❌ Wrong secret code — try again';
     } else if (e.status === 429) {
@@ -674,8 +674,8 @@ function renderMustChange() {
   return `<div style="padding:24px 20px 40px">
     <div style="font-size:50px;text-align:center;margin-bottom:12px">🔑</div>
     <div style="color:#c8e6a0;font-size:22px;font-weight:bold;margin-bottom:6px;text-align:center">Choose a new secret code</div>
-    <div style="color:#6a8a50;font-size:13px;margin-bottom:20px;text-align:center">Ed gave you a temporary code. Pick your own 4-digit code to keep using Fish Log.</div>
-    ${tempPin ? '' : `<div class="field"><div class="field-label">Temporary code from Ed</div><input type="number" id="mcOld" placeholder="Temporary code" style="letter-spacing:6px"></div>`}
+    <div style="color:#6a8a50;font-size:13px;margin-bottom:20px;text-align:center">For security, Fish Log needs you to choose a new 4-digit code. All your outings and history stay exactly as they are.</div>
+    ${tempPin ? '' : `<div class="field"><div class="field-label">Your current code</div><input type="number" id="mcOld" placeholder="Your current code" style="letter-spacing:6px"></div>`}
     <div class="field"><div class="field-label">New 4-digit code</div><input type="number" id="mcNew" placeholder="4 digits you will remember" style="letter-spacing:6px"></div>
     <div class="field"><div class="field-label">Type it again</div><input type="number" id="mcNew2" placeholder="Same 4 digits" style="letter-spacing:6px"></div>
     <div id="mcMsg" style="color:#e07070;font-size:13px;min-height:20px;margin-bottom:12px"></div>
@@ -687,10 +687,10 @@ async function submitMustChange() {
   const oldPin = tempPin || g('mcOld'), n1 = g('mcNew'), n2 = g('mcNew2');
   const msg = document.getElementById('mcMsg');
   const fail = t => { if (msg) msg.textContent = t; };
-  if (!oldPin) return fail('❌ Enter the temporary code');
+  if (!oldPin) return fail('❌ Enter your current code');
   if (!/^\d{4}$/.test(n1)) return fail('❌ New code must be exactly 4 digits');
   if (n1 !== n2) return fail('❌ The two codes do not match');
-  if (n1 === oldPin) return fail('❌ Pick a different code than the temporary one');
+  if (n1 === oldPin) return fail('❌ Pick a different code than your current one');
   try {
     const res = await authCall('AUTH_CHANGE_PIN', { oldPin, newPin: n1 });
     saveSession(res.user, res.token);
@@ -698,7 +698,7 @@ async function submitMustChange() {
     await finishLogin();
     showMsg('✅ New code saved', 'ok');
   } catch (e) {
-    fail(e.status === 401 ? '❌ The temporary code is wrong' : e.status === 429 ? '🔒 Too many wrong tries. Try again later.' : '❌ ' + e.message);
+    fail(e.status === 401 ? '❌ That current code is wrong' + ((e.data && e.data.attemptsLeft != null) ? ' — ' + e.data.attemptsLeft + ' ' + (e.data.attemptsLeft === 1 ? 'try' : 'tries') + ' left' : '') : e.status === 429 ? '🔒 Too many wrong tries. Try again later.' : '❌ ' + e.message);
   }
 }
 
@@ -1375,7 +1375,7 @@ async function saveProfile() {
       } catch (e) {
         const d = e.data || {};
         if(msg) msg.textContent = e.status === 401
-          ? '❌ Current secret code is wrong' + ((d.attemptsLeft != null && d.attemptsLeft <= 2) ? ' — ' + d.attemptsLeft + ' ' + (d.attemptsLeft === 1 ? 'try' : 'tries') + ' left' : '')
+          ? '❌ Current secret code is wrong' + ((d.attemptsLeft != null) ? ' — ' + d.attemptsLeft + ' ' + (d.attemptsLeft === 1 ? 'try' : 'tries') + ' left' : '')
           : e.status === 429 ? '🔒 Too many wrong tries. Try again in ' + Math.max(1, Math.ceil((d.retryAfter || 900) / 60)) + ' minutes.'
           : '❌ Save failed: ' + e.message;
         return;
